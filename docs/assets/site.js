@@ -1,5 +1,36 @@
 (() => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const t = window.PortfolioI18n?.t || ((text) => text);
+
+  function updateLanguageLinks() {
+    for (const link of document.querySelectorAll('[data-language]')) {
+      const destination = new URL(link.href, location.href);
+      destination.search = location.search;
+      destination.hash = location.hash;
+      link.href = destination.pathname + destination.search + destination.hash;
+    }
+  }
+
+  function setupNavigation() {
+    updateLanguageLinks();
+    window.addEventListener('popstate', updateLanguageLinks);
+    window.addEventListener('hashchange', updateLanguageLinks);
+    const header = document.querySelector('.site-header');
+    if (header) {
+      const measure = () => document.documentElement.style.setProperty('--header-height', Math.ceil(header.getBoundingClientRect().height) + 'px');
+      measure();
+      if ('ResizeObserver' in window) new ResizeObserver(measure).observe(header);
+      else window.addEventListener('resize', measure);
+    }
+    for (const link of document.querySelectorAll('[data-to-top]')) link.addEventListener('click', (event) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      window.scrollTo({ top: 0, left: 0, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+      document.querySelector('.brand')?.focus({ preventScroll: true });
+      if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+      updateLanguageLinks();
+    });
+  }
 
   function setupFilters() {
     const buttons = Array.from(document.querySelectorAll("[data-filter]"));
@@ -27,14 +58,16 @@
       const count = cards.filter((card) => !card.hidden).length;
       if (empty) empty.hidden = !cards.length || count > 0;
       if (total) total.textContent = count;
-      if (noun) noun.textContent = count % 100 >= 11 && count % 100 <= 14 ? "проектов" :
-        count % 10 === 1 ? "проект" : count % 10 >= 2 && count % 10 <= 4 ? "проекта" : "проектов";
+      if (noun) noun.textContent = document.documentElement.lang === 'en' ? (count === 1 ? 'project' : 'projects') :
+        t(count % 100 >= 11 && count % 100 <= 14 ? "проектов" :
+          count % 10 === 1 ? "проект" : count % 10 >= 2 && count % 10 <= 4 ? "проекта" : "проектов");
       if (updateHistory) {
         const next = new URL(location.href);
         if (valid === "all") next.searchParams.delete("category");
         else next.searchParams.set("category", valid);
         if (next.href !== location.href) history.pushState({ category: valid }, "", next);
       }
+      updateLanguageLinks();
     };
 
     render(new URL(location.href).searchParams.get("category") || "all", false);
@@ -77,7 +110,7 @@
       const button = video.closest("[data-process-video]")?.querySelector("[data-video-toggle]");
       if (!button) return;
       button.textContent = paused ? "▶" : "Ⅱ";
-      button.setAttribute("aria-label", paused ? "Воспроизвести видео" : "Приостановить видео");
+      button.setAttribute("aria-label", t(paused ? "Воспроизвести видео" : "Приостановить видео"));
       button.setAttribute("aria-pressed", String(paused));
     };
 
@@ -129,7 +162,7 @@
         video.controls = true;
         video.closest("[data-process-video]")?.classList.add("video-error");
         const caption = video.closest("[data-process-video]")?.querySelector(".video-caption");
-        if (caption) caption.textContent = "Видео недоступно. Описание и материалы проекта сохранены.";
+        if (caption) caption.textContent = t("Видео недоступно. Описание и материалы проекта сохранены.");
       });
       video.closest("[data-process-video]")?.querySelector("[data-video-toggle]")?.addEventListener("click", () => {
         if (!video.paused) {
@@ -223,16 +256,16 @@
       const actual = Math.abs(scale - 1) < 0.015;
       const realDesign = currentFrame()?.dataset.realOriginal === "true";
       readout.value = Math.abs(scale - fitScale) < Math.max(0.015, fitScale * 0.015)
-        ? "Fit" : actual ? (realDesign ? "1:1" : "1:1 файл") :
-          Math.round(scale / Math.max(fitScale, 0.001) * 100) + "% от Fit";
+        ? "Fit" : actual ? (realDesign ? "1:1" : t("1:1 файл")) :
+          Math.round(scale / Math.max(fitScale, 0.001) * 100) + t("% от Fit");
       oneButton.disabled = !realDesign;
       fitButton.disabled = Math.abs(scale - fitScale) < fitScale * .001;
       dialog.querySelector("[data-minus]").disabled = scale <= minimumScale * 1.001;
       dialog.querySelector("[data-plus]").disabled = scale >= maximumScale * .999;
       if (zoomButtons.includes(focusedControl) && focusedControl.disabled) stage.focus({ preventScroll: true });
-      oneButton.title = realDesign
+      oneButton.title = t(realDesign
         ? "Один пиксель оригинала соответствует одному CSS-пикселю"
-        : "Для кадра нет подтверждённого оригинала дизайна высокого разрешения";
+        : "Для кадра нет подтверждённого оригинала дизайна высокого разрешения");
     }
 
     function constrain() {
@@ -307,7 +340,7 @@
       errorPanel.hidden = true;
       image.style.visibility = "hidden";
       image.removeAttribute("src");
-      title.textContent = activeFrame.dataset.lightboxTitle || "Проект";
+      title.textContent = activeFrame.dataset.lightboxTitle || t("Проект");
       caption.textContent = activeFrame.dataset.lightboxCaption || "";
       const count = (activeIndex + 1) + " / " + frames.length;
       counter.textContent = count;
@@ -497,6 +530,7 @@
     });
   }
 
+  setupNavigation();
   setupFilters();
   setupCaseReturn();
   setupVideos();

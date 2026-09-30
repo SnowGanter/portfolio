@@ -1,4 +1,5 @@
 (() => {
+  const t = window.PortfolioI18n?.t || ((text) => text);
   const frames = [...document.querySelectorAll('[data-youtube-id]')];
   if (!frames.length) return;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -14,7 +15,7 @@
         clearTimeout(timer);
         script.remove();
         apiPromise = null;
-        reject(new Error('YouTube недоступен. Попробуйте ещё раз или откройте ролик по ссылке.'));
+        reject(new Error(t('YouTube недоступен. Попробуйте ещё раз или откройте ролик по ссылке.')));
       };
       window.onYouTubeIframeAPIReady = () => {
         clearTimeout(timer);
@@ -36,8 +37,8 @@
     const state = { visible: false, ready: false, loading: false, userPaused: false, requested: false, systemPause: false, player: null, failed: false };
     let readyTimer;
     const playingUI = (playing) => {
-      button.textContent = playing ? 'Ⅱ Пауза' : '▶ Смотреть';
-      button.setAttribute('aria-label', playing ? 'Приостановить видео' : 'Воспроизвести видео');
+      button.textContent = t(playing ? 'Ⅱ Пауза' : '▶ Смотреть');
+      button.setAttribute('aria-label', t(playing ? 'Приостановить видео' : 'Воспроизвести видео'));
     };
     const fail = (message) => {
       clearTimeout(readyTimer);
@@ -48,10 +49,10 @@
       state.player = null;
       slot.replaceChildren();
       poster.hidden = false;
-      status.textContent = message;
+      status.textContent = t(message);
       button.disabled = false;
-      button.textContent = '↻ Повторить';
-      button.setAttribute('aria-label', 'Повторить загрузку YouTube');
+      button.textContent = t('↻ Повторить');
+      button.setAttribute('aria-label', t('Повторить загрузку YouTube'));
     };
     const pause = () => {
       if (!state.ready) return;
@@ -74,14 +75,14 @@
       state.loading = true;
       state.failed = false;
       button.disabled = true;
-      button.textContent = 'Подключаем…';
-      status.textContent = 'Подключаем YouTube…';
+      button.textContent = t('Подключаем…');
+      status.textContent = t('Подключаем YouTube…');
       try {
         const YT = await loadAPI();
         const iframe = document.createElement('iframe');
         const params = new URLSearchParams({ enablejsapi: '1', origin: location.origin, playsinline: '1', controls: '1', loop: '1', playlist: frame.dataset.youtubeId, autoplay: '0', rel: '0' });
         iframe.src = 'https://www.youtube.com/embed/' + frame.dataset.youtubeId + '?' + params;
-        iframe.title = frame.dataset.videoTitle + ' — видео на YouTube';
+        iframe.title = frame.dataset.videoTitle + ' — ' + t('видео на YouTube');
         iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
         iframe.allowFullscreen = true;
         iframe.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -95,7 +96,7 @@
             button.disabled = false;
             playingUI(false);
             poster.hidden = true;
-            status.textContent = reducedMotion.matches ? 'Автозапуск отключён: уменьшение движения.' : 'Видео процесса · без звука';
+            status.textContent = t(reducedMotion.matches ? 'Автозапуск отключён: уменьшение движения.' : 'Видео процесса · без звука');
             play();
           },
           onStateChange: (event) => {
@@ -104,7 +105,7 @@
               state.userPaused = false;
               state.requested = false;
               playingUI(true);
-              status.textContent = 'Видео процесса · YouTube';
+              status.textContent = t('Видео процесса · YouTube');
             } else if (event.data === 2) {
               if (!state.systemPause && state.visible && !document.hidden) state.userPaused = true;
               state.systemPause = false;
@@ -116,7 +117,7 @@
           onAutoplayBlocked: () => {
             state.userPaused = true;
             playingUI(false);
-            status.textContent = 'Браузер остановил автозапуск. Нажмите «Смотреть».';
+            status.textContent = t('Браузер остановил автозапуск. Нажмите «Смотреть».');
           },
           onError: (event) => fail([100, 101, 150].includes(event.data)
             ? 'Ролик недоступен или автор запретил встраивание. Проверьте его на YouTube.'
@@ -146,6 +147,6 @@
       else if (state.visible && !state.userPaused && !state.failed) initialize();
     });
     window.addEventListener('pagehide', pause);
-    if (reducedMotion.matches) status.textContent = 'Автозапуск отключён: уменьшение движения.';
+    if (reducedMotion.matches) status.textContent = t('Автозапуск отключён: уменьшение движения.');
   }
 })();

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fa">
+  <meta name="color-scheme" content="light">
+  <link rel="manifest" href="/portfolio/site.webmanifest">
+  <meta name="description" content="ComfyUI workflow, процессы и результаты.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ComfyUI · Workflow">
+  <meta property="og:description" content="ComfyUI workflow, процессы и результаты.">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ComfyUI · Workflow">
+  <meta name="twitter:description" content="ComfyUI workflow, процессы и результаты.">
+  <title>ComfyUI · Workflow</title>
+  <link rel="icon" href="/portfolio/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/portfolio/assets/site.css?v=8a52af644501">
+  <script src="/portfolio/assets/i18n.js?v=8a52af644501" defer></script>
+  <script src="/portfolio/assets/site.js?v=8a52af644501" defer></script>
+  <script src="/portfolio/assets/youtube.js?v=8a52af644501" defer></script>
+<link rel="canonical" href="https://snowganter.github.io/portfolio/ru/comfyui.html"><meta property="og:url" content="https://snowganter.github.io/portfolio/ru/comfyui.html"><link rel="alternate" hreflang="en" href="https://snowganter.github.io/portfolio/comfyui.html"><link rel="alternate" hreflang="uk" href="https://snowganter.github.io/portfolio/uk/comfyui.html"><link rel="alternate" hreflang="ru" href="https://snowganter.github.io/portfolio/ru/comfyui.html"><link rel="alternate" hreflang="x-default" href="https://snowganter.github.io/portfolio/comfyui.html"><meta property="og:locale" content="ru_RU">
+</head>
+<body class="page page--comfyui">
+  <a class="skip-link" href="#main">К содержанию</a>
+  
+  <header class="site-header">
+    <a class="brand" href="/portfolio/ru/index.html">ПОРТФОЛИО<span class="brand-dot" aria-hidden="true"></span></a>
+    <nav class="main-nav" aria-label="Основные направления"><a href="/portfolio/ru/etsy.html">Etsy</a><a href="/portfolio/ru/amazon.html">Amazon A+</a><a href="/portfolio/ru/photoshop.html">Photoshop Scripts</a><a href="/portfolio/ru/comfyui.html" aria-current="page">ComfyUI</a></nav>
+    <div class="header-tools"><nav class="language-switch" aria-label="Язык сайта"><a href="/portfolio/comfyui.html" data-language="en" lang="en" hreflang="en" aria-label="English">EN</a><a href="/portfolio/uk/comfyui.html" data-language="uk" lang="uk" hreflang="uk" aria-label="Українська">UK</a><a href="/portfolio/ru/comfyui.html" data-language="ru" lang="ru" hreflang="ru" aria-label="Русский" aria-current="true">RU</a></nav></div>
+  </header>
+  <main id="main">
+  <section class="section-intro wrap"><div><p class="eyebrow">ГЕНЕРАТИВНЫЕ ПРОЦЕССЫ</p><h1>ComfyUI</h1></div><p>От исходного изображения до результата — с демонстрацией процесса и графа workflow.</p></section>
+  <section class="process-section wrap" aria-label="Проекты ComfyUI"><div class="case-feed" id="project-grid"><article class="process-row"><div class="process-copy process-intro"><p class="eyebrow">Разработка ComfyUI workflow</p><h2>Один исходник — три ветви вариаций</h2><p>Организовать несколько вариантов обработки одного исходного изображения в общем графе.</p></div><div class="process-media"><a class="process-diagram-link" aria-label="Открыть кейс: Один исходник — три ветви вариаций" href="/portfolio/ru/projects/comfyui-three-variations.html"><div class="process-diagram process-diagram--comfyui"><div class="diagram-heading"><span class="diagram-app">C</span><span>COMFYUI WORKFLOW</span></div><ol><li><span class="diagram-number">01</span><span>Исходное изображение</span></li><li><span class="diagram-number">02</span><span>Масштабирование и VAE Encode</span></li><li><span class="diagram-number">03</span><span>Три ветви: текст и KSampler</span></li><li><span class="diagram-number">04</span><span>VAEDecode и три SaveImage</span></li></ol><p class="diagram-caption">Схема по исходному коду · не видеозапись</p></div></a></div><div class="process-copy process-description"><p>Собрал загрузку и масштабирование исходника, общую подготовку моделей и VAE, затем три ветви с текстовой подготовкой через IFGeminiNode, KSampler, VAEDecode и SaveImage.</p><p>В графе есть три отдельные точки сохранения и собственные текстовые инструкции для каждой ветви. Примеры выходов и запись выполнения для этого кейса пока не приложены.</p><a class="text-link" href="/portfolio/ru/projects/comfyui-three-variations.html?from=comfyui">Подробности <span aria-hidden="true">↗</span></a></div></article><article class="process-row process-row--reverse"><div class="process-copy process-intro"><p class="eyebrow">Разработка ComfyUI workflow</p><h2>Подготовка изображения к векторизации</h2><p>Передать изображение в узел векторизации, сохранив альфа-канал и ограничив количество пикселей.</p></div><div class="process-media"><a class="process-diagram-link" aria-label="Открыть кейс: Подготовка изображения к векторизации" href="/portfolio/ru/projects/comfyui-vector-preparation.html"><div class="process-diagram process-diagram--comfyui"><div class="diagram-heading"><span class="diagram-app">C</span><span>COMFYUI WORKFLOW</span></div><ol><li><span class="diagram-number">01</span><span>LoadImage</span></li><li><span class="diagram-number">02</span><span>Изображение с альфа-каналом</span></li><li><span class="diagram-number">03</span><span>Ограничение до 2 Мп</span></li><li><span class="diagram-number">04</span><span>MyVectorizerStable</span></li><li><span class="diagram-number">05</span><span>SVG</span></li></ol><p class="diagram-caption">Схема по исходному коду · не видеозапись</p></div></a></div><div class="process-copy process-description"><p>Связал LoadImage, JoinImageWithAlpha и VectorizerLimitPixels с пользовательским узлом MyVectorizerStable.</p><p>Вход ограничен настройкой 2 Мп, а выход узла представлен строкой SVG. Качество результата и время работы здесь не заявляются: показана структура предоставленного workflow.</p><a class="text-link" href="/portfolio/ru/projects/comfyui-vector-preparation.html?from=comfyui">Подробности <span aria-hidden="true">↗</span></a></div></article></div></section>
+</main>
+
+  <footer class="site-footer" id="contact">
+    <a class="footer-brand" href="/portfolio/ru/index.html">ПОРТФОЛИО</a>
+    <span>Дизайн для товаров и интерьеров · Автоматизация визуальных процессов</span>
+    
+    <a class="to-top" href="#top" data-to-top>Наверх ↑</a>
+  </footer>
+</body>
+</html>
