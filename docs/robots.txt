@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://snowganter.github.io/portfolio/sitemap.xml

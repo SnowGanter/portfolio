@@ -1,1 +1,14 @@
 # portfolio
+
+Design portfolio: Etsy, Amazon A+, Photoshop Scripts, ComfyUI.
+
+Website: **https://snowganter.github.io/portfolio/**
+
+`docs/` contains the verified static release. GitHub Actions deploys this folder
+to GitHub Pages after every update to `main`.
+
+The editable source, unpublished projects, print masters, private archives and
+local QA fixtures are intentionally not stored in this public repository.
+Updates are built from the owner's local project and pushed only after checks.
+
+No server, database or Node.js runtime is required by the deployed site.
