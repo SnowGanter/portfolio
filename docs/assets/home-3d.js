@@ -1,6 +1,6 @@
-import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=9cb446ae12fc';
-import { separateDesignSurfaces, DESIGN_SHAPE, DESIGN_TRACKING, DESIGN_KERNING, getDesignFraming } from './design-geometry.js?v=9cb446ae12fc';
-import { createDesignGlass } from './design-glass.js?v=9cb446ae12fc';
+import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=f737ad01756f';
+import { createDesignWord, getDesignFraming } from './design-geometry.js?v=f737ad01756f';
+import { createDesignGlass } from './design-glass.js?v=f737ad01756f';
 
 const stage = document.querySelector('[data-design-stage]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -43,8 +43,8 @@ async function initialize(stage) {
     const probe = document.createElement('canvas').getContext('webgl2');
     if (!probe) return fallback();
     probe.getExtension('WEBGL_lose_context')?.loseContext();
-    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=9cb446ae12fc'), import('./vendor/cannon.js?v=9cb446ae12fc')]);
-    const response = await fetch(new URL('./fonts/design.typeface.json?v=9cb446ae12fc', import.meta.url), { signal: AbortSignal.timeout(12000) });
+    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=f737ad01756f'), import('./vendor/cannon.js?v=f737ad01756f')]);
+    const response = await fetch(new URL('./fonts/design.typeface.json?v=f737ad01756f', import.meta.url), { signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('Font unavailable');
     const font = new THREE.FontLoader().parse(await response.json());
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -52,26 +52,9 @@ async function initialize(stage) {
     renderer.setClearColor(0x000000, 0); renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
     const group = new THREE.Group();
-    const letterPositions = [], shapes = [];
-    let cursor = 0, height = 0, depth = 0, previousCharacter = '';
-    for (const character of 'DESIGN') {
-      const geometry = new THREE.TextGeometry(character, { font, ...DESIGN_SHAPE });
-      geometry.scale(.90, 1, 1);
-      geometries.push(geometry); geometry.computeBoundingBox();
-      separateDesignSurfaces(geometry);
-      const b = geometry.boundingBox;
-      const w = b.max.x - b.min.x, h = b.max.y - b.min.y, d = b.max.z - b.min.z;
-      height = Math.max(height, h); depth = Math.max(depth, d);
-      geometry.translate(-(b.max.x + b.min.x) / 2, -(b.max.y + b.min.y) / 2, -(b.max.z + b.min.z) / 2);
-      cursor += DESIGN_KERNING[previousCharacter + character] || 0;
-      const x = cursor + w / 2; cursor += w + DESIGN_TRACKING;
-      previousCharacter = character;
-      letterPositions.push(x);
-      shapes.push({ half: [w / 2, h / 2, d / 2], center: [x, 0, 0] });
-    }
-    const width = cursor - DESIGN_TRACKING;
-    letterPositions.forEach((x, i) => { letterPositions[i] = x - width / 2; });
-    shapes.forEach((shape) => { shape.center[0] -= width / 2; });
+    const word = createDesignWord(THREE, font);
+    const { letterPositions, shapes, width, height, depth } = word;
+    geometries.push(...word.geometries);
     physics = createDesignPhysics(C, shapes);
     glassRenderer = createDesignGlass(THREE, renderer, geometries, letterPositions);
     const letters = glassRenderer.letters;
@@ -220,7 +203,9 @@ async function initialize(stage) {
     canvas.addEventListener('webglcontextlost', (event) => { event.preventDefault(); fallback(); });
     window.addEventListener('pagehide', () => { physics.endDrag(true); stop(); });
     window.addEventListener('pageshow', wake);
-    ready = true; stage.classList.add('is-3d-ready'); resize(); wake();
+    // Size the camera and draw the exact first frame before replacing the SVG.
+    // The canvas is absolutely positioned; it never participates in page layout.
+    ready = true; resize(); stage.classList.add('is-3d-ready'); wake();
     if (reduced.matches) stop();
   } catch { fallback(); }
 }
