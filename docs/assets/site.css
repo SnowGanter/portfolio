@@ -1,4 +1,4 @@
-@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=51d354700478') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=09e294e58bb1') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
 :root {
   color-scheme: light;
   --paper: #f7f8fa;
@@ -44,7 +44,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .site-header { position: sticky; top: 0; z-index: 30; display: grid; grid-template-columns: minmax(100px, 1fr) auto minmax(108px, 1fr); align-items: center; gap: 24px; width: 100%; min-height: 70px; padding-inline: max(var(--gutter), calc((100% - var(--wrap)) / 2)); border-bottom: 1px solid var(--line); background: #f7f8faf2; backdrop-filter: blur(12px); }
 .brand, .footer-brand { width: fit-content; color: var(--ink); font-size: 14px; font-weight: 720; letter-spacing: .025em; }
 .brand-dot { display: inline-block; width: 7px; height: 7px; margin-left: 4px; border-radius: 50%; background: var(--accent); vertical-align: top; }
-.main-nav { display: flex; align-items: stretch; gap: clamp(12px, 2vw, 28px); min-width: 0; }
+.main-nav { display: flex; align-items: stretch; gap: clamp(10px, 1.3vw, 22px); min-width: 0; }
 .main-nav a { position: relative; display: inline-flex; align-items: center; min-height: 70px; padding: 0 2px; color: #454b55; font-size: 14px; font-weight: 560; white-space: nowrap; transition: color .18s ease; }
 .main-nav a:hover, .main-nav a[aria-current="page"] { color: var(--ink); }
 .main-nav a[aria-current="page"]::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: var(--accent); content: ""; }
@@ -604,3 +604,15 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .card-media .process-diagram { min-height: 320px; padding: 24px; border-radius: 0; }
 .card-media .process-diagram li { font-size: 15px; padding: 9px 0; }
 .card-media .process-diagram ol { margin: 20px 0; }
+/* Six directions: keep language controls visible, never squeeze the links. */
+@media (min-width: 721px) and (max-width: 1000px) {
+  .site-header { grid-template-columns: 1fr auto; gap: 0 12px; min-height: unset; padding-block: 8px 0; }
+  .brand { grid-column: 1; grid-row: 1; min-height: 38px; display: inline-flex; align-items: center; }
+  .header-tools { grid-column: 2; grid-row: 1; }
+  .main-nav { grid-column: 1 / -1; justify-content: space-between; min-width: 0; overflow-x: auto; gap: 16px; }
+  .main-nav a { flex-shrink: 0; min-height: 44px; }
+}
+@media (max-width: 720px) {
+  .main-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 10px; overflow: visible; padding-block: 4px 0; }
+  .main-nav a { justify-content: center; min-height: 39px; white-space: normal; text-align: center; font-size: 11px; line-height: 1.25; }
+}
