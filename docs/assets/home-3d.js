@@ -1,5 +1,5 @@
-import { createDesignPhysics, canAnimate, clamp } from './design-physics.js?v=f7881c8bb529';
-import { separateDesignSurfaces } from './design-geometry.js?v=f7881c8bb529';
+import { createDesignPhysics, canAnimate, clamp, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=743301b9eff9';
+import { separateDesignSurfaces, DESIGN_SHAPE, DESIGN_TRACKING, DESIGN_KERNING, getDesignFraming } from './design-geometry.js?v=743301b9eff9';
 
 const stage = document.querySelector('[data-design-stage]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -43,8 +43,8 @@ async function initialize(stage) {
     const probe = document.createElement('canvas').getContext('webgl2');
     if (!probe) return fallback();
     probe.getExtension('WEBGL_lose_context')?.loseContext();
-    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=f7881c8bb529'), import('./vendor/cannon.js?v=f7881c8bb529')]);
-    const response = await fetch(new URL('./fonts/design.typeface.json?v=f7881c8bb529', import.meta.url), { signal: AbortSignal.timeout(12000) });
+    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=743301b9eff9'), import('./vendor/cannon.js?v=743301b9eff9')]);
+    const response = await fetch(new URL('./fonts/design.typeface.json?v=743301b9eff9', import.meta.url), { signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('Font unavailable');
     const font = new THREE.FontLoader().parse(await response.json());
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -56,81 +56,63 @@ async function initialize(stage) {
     const studio = new THREE.RoomEnvironment();
     const pmrem = new THREE.PMREMGenerator(renderer);
     environment = pmrem.fromScene(studio, .06, .1, 100, { size: 128 });
-    scene.environment = environment.texture; scene.environmentIntensity = .45;
+    scene.environment = environment.texture; scene.environmentIntensity = .18;
     studio.dispose(); pmrem.dispose();
-    // One tinted front surface and one clear outer shell. No screen-space
-    // refraction: it displaced the blue layer and exposed phantom inner edges.
-    // DoubleSide is only for seeing the SAME front layer through the clear rear.
-    const front = new THREE.MeshPhysicalMaterial({ color: 0x1938cd, roughness: .23, metalness: 0,
-      clearcoat: .35, clearcoatRoughness: .13, envMapIntensity: .45,
+    // Graphic colour, not glossy paint: lighting must never wash blue to white.
+    // The same front cap remains visible through the colourless back. Its depth
+    // participates in the scene normally, rather than an always-on-top overlay.
+    const front = new THREE.MeshBasicMaterial({ color: 0x304cde, toneMapped: false,
       side: THREE.DoubleSide, forceSinglePass: true,
-      transparent: true, opacity: .84, depthWrite: false, depthTest: false });
-    const glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .07, metalness: 0,
-      ior: 1.46, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: 1.2,
+      transparent: true, opacity: .86, depthWrite: true, depthTest: true });
+    const glass = new THREE.MeshPhysicalMaterial({ color: 0x9c9c9c, roughness: .48, metalness: 0,
+      ior: 1.2, specularIntensity: .08, clearcoat: 0, envMapIntensity: .15,
       transparent: true, opacity: 1, depthWrite: false });
     // Keep only exterior-facing surfaces. The centre is almost clear; grazing
     // angles catch the studio light, describing a single solid glass silhouette.
     glass.onBeforeCompile = (shader) => {
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
-        'diffuseColor.a *= mix(0.035, 0.42, pow(1.0 - abs(dot(normal, geometryViewDir)), 3.0));\n#include <opaque_fragment>');
+        'diffuseColor.a *= mix(0.055, 0.30, pow(1.0 - abs(dot(normal, geometryViewDir)), 2.0));\n#include <opaque_fragment>');
     };
-    glass.customProgramCacheKey = () => 'design-clear-outer-surface-v1';
+    glass.customProgramCacheKey = () => 'design-soft-outer-surface-v2';
     materials.push(front, glass);
     const group = new THREE.Group(); scene.add(group);
     const letters = [], shapes = [];
-    let cursor = 0, height = 0;
+    let cursor = 0, height = 0, depth = 0, previousCharacter = '';
     for (const character of 'DESIGN') {
-      const geometry = new THREE.TextGeometry(character, { font, size: 2, depth: .72, curveSegments: 16,
-        bevelEnabled: true, bevelThickness: .09, bevelSize: .065, bevelSegments: 6 });
+      const geometry = new THREE.TextGeometry(character, { font, ...DESIGN_SHAPE });
+      geometry.scale(.90, 1, 1);
       geometries.push(geometry); geometry.computeBoundingBox();
       separateDesignSurfaces(geometry);
       const b = geometry.boundingBox;
       const w = b.max.x - b.min.x, h = b.max.y - b.min.y, d = b.max.z - b.min.z;
-      height = Math.max(height, h);
+      height = Math.max(height, h); depth = Math.max(depth, d);
       geometry.translate(-(b.max.x + b.min.x) / 2, -(b.max.y + b.min.y) / 2, -(b.max.z + b.min.z) / 2);
-      // Composite the blue surface after the exterior highlights. Shell walls
-      // must not show up as inner ribs across the coloured face viewed from back.
-      const faceGeometry = geometry.clone(); geometries.push(faceGeometry);
-      faceGeometry.groups = faceGeometry.groups.filter((g) => g.materialIndex === 0);
-      geometry.groups = geometry.groups.filter((g) => g.materialIndex === 1);
-      const shell = new THREE.Mesh(geometry, materials);
-      const face = new THREE.Mesh(faceGeometry, materials);
-      shell.renderOrder = 1; face.renderOrder = 2;
-      shell.position.x = face.position.x = cursor + w / 2; cursor += w + .09;
-      letters.push(shell, face); group.add(shell, face);
-      shapes.push({ half: [w / 2, h / 2, d / 2], center: [face.position.x, 0, 0] });
+      const mesh = new THREE.Mesh(geometry, materials);
+      cursor += DESIGN_KERNING[previousCharacter + character] || 0;
+      mesh.position.x = cursor + w / 2; cursor += w + DESIGN_TRACKING;
+      previousCharacter = character;
+      letters.push(mesh); group.add(mesh);
+      shapes.push({ half: [w / 2, h / 2, d / 2], center: [mesh.position.x, 0, 0] });
     }
-    const width = cursor - .09;
+    const width = cursor - DESIGN_TRACKING;
     letters.forEach((mesh) => { mesh.position.x -= width / 2; });
     shapes.forEach((shape) => { shape.center[0] -= width / 2; });
     physics = createDesignPhysics(C, shapes);
     const camera = new THREE.PerspectiveCamera(30, 1, .1, 100);
-    const key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(-4, 7, 8); scene.add(key);
-    const fill = new THREE.DirectionalLight(0xe3eaff, .5); fill.position.set(6, 2, 4); scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xffffff, 1.5); rim.position.set(2, 4, -7); scene.add(rim);
-    scene.add(new THREE.AmbientLight(0xffffff, .25));
+    const key = new THREE.DirectionalLight(0xffffff, .7); key.position.set(-4, 7, 8); scene.add(key);
+    const fill = new THREE.DirectionalLight(0xffffff, .4); fill.position.set(6, 2, -4); scene.add(fill);
+    scene.add(new THREE.AmbientLight(0xffffff, .75));
     const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
     const handlePoint = new THREE.Vector3(), handleRotation = new THREE.Quaternion();
-    const corner = new THREE.Vector3();
-    let baseDistance = 12;
     const paint = () => {
       if (!ready || failed) return;
       const { position: p, quaternion: q } = physics.body;
       group.position.set(p.x, p.y, p.z); group.quaternion.set(q.x, q.y, q.z, q.w);
-      const tan = Math.tan(camera.fov * Math.PI / 360);
-      let fitDistance = baseDistance;
-      // Fit the actual orientation, including perspective depth, when a strong
-      // impulse tips the long word vertically. Returning zoom is gently damped.
-      for (const x of [-width / 2, width / 2]) for (const y of [-height / 2, height / 2]) for (const z of [-.45, .45]) {
-        corner.set(x, y, z).applyQuaternion(group.quaternion).add(group.position);
-        fitDistance = Math.max(fitDistance, Math.abs(corner.x) / (tan * camera.aspect * .88) + corner.z,
-          Math.abs(corner.y) / (tan * .88) + corner.z);
-      }
-      camera.position.z = fitDistance > camera.position.z ? fitDistance : camera.position.z + (fitDistance - camera.position.z) * .045;
       renderer.render(scene, camera);
       canvas.dataset.pose = [q.x, q.y, q.z, q.w].map((n) => n.toFixed(4)).join(',');
       canvas.dataset.phase = physics.phase.toFixed(4);
       canvas.dataset.position = [p.x, p.y, p.z].map((n) => n.toFixed(4)).join(',');
+      canvas.dataset.cameraDistance = camera.position.z.toFixed(4);
       canvas.setAttribute('aria-pressed', String(paused || reduced.matches));
     };
     const stop = () => {
@@ -152,11 +134,8 @@ async function initialize(stage) {
       const { width: w, height: h } = canvas.getBoundingClientRect();
       if (!w || !h || failed) return;
       camera.aspect = w / h;
-      const halfFov = camera.fov * Math.PI / 360;
-      // Keep the complete spinning body in frame at portrait breakpoints.
-      const radius = Math.hypot(width / 2, .45);
-      baseDistance = radius * Math.sqrt(1 + 1 / (Math.tan(halfFov) * camera.aspect * .84) ** 2) + .3;
-      camera.position.set(0, 0, baseDistance);
+      const framing = getDesignFraming({ width, height, depth, aspect: camera.aspect, movement: MAX_TRANSLATION, tilt: MAX_SWING + REST_TILT_BOUND, fov: camera.fov });
+      camera.position.set(0, 0, framing.distance);
       camera.updateProjectionMatrix(); renderer.setSize(w, h, false); paint();
     };
     const setRay = (event) => {
@@ -209,7 +188,7 @@ async function initialize(stage) {
       canvas.classList.remove('is-grabbing');
       if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       if (!cancelled && !current.moved) {
-        if (enabled()) physics.applyImpulse(current.point, { x: 0, y: .1, z: -5.2 });
+        if (enabled()) physics.applyImpulse(current.point, { x: 0, y: .1, z: -5.2 }, { carryTurn: true });
         else physics.rotateManual(0, .18);
       }
       if (!enabled()) physics.zeroVelocity();
@@ -241,7 +220,7 @@ async function initialize(stage) {
         paused = event.key === 'Escape' || !paused;
         physics.endDrag(true); stop();
       } else if (event.key === 'Enter') {
-        if (enabled()) physics.applyImpulse({ x: width * .28, y: .15, z: .45 }, { x: 0, y: 0, z: -5.2 });
+        if (enabled()) physics.applyImpulse({ x: width * .28, y: .15, z: .45 }, { x: 0, y: 0, z: -5.2 }, { carryTurn: true });
         else physics.rotateManual(0, .18);
       } else {
         const vertical = event.key === 'ArrowUp' || event.key === 'ArrowDown';

@@ -1,6 +1,9 @@
 // Renderer-independent rigid-body simulation. Impulses act at the raycast point,
 // dragging uses a physical point constraint, and a soft motor drives a 30s turn.
 export const TURN_SECONDS = 30;
+export const MAX_TRANSLATION = .55;
+export const MAX_SWING = .28;
+export const REST_TILT_BOUND = .22;
 export const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
 export const canAnimate = ({ reduced, paused, visible, hidden, ready }) => ready && visible && !hidden && !reduced && !paused;
 
@@ -16,6 +19,9 @@ export function createDesignPhysics(C, shapes) {
   const target = rest.clone(), dragTarget = rest.clone(), spin = new C.Quaternion(), inverse = new C.Quaternion(), error = new C.Quaternion();
   const axis = new C.Vec3(0, 1, 0), motorVelocity = new C.Vec3();
   const acceleration = new C.Vec3(), local = new C.Vec3(), torque = new C.Vec3();
+  const restInverse = rest.conjugate();
+  const relative = new C.Quaternion(), twist = new C.Quaternion(), twistInverse = new C.Quaternion(), swing = new C.Quaternion(), limited = new C.Quaternion();
+  const swingAxis = new C.Vec3(), worldSwingAxis = new C.Vec3();
   let phase = 0, elapsed = 0, released = -10, constraint = null;
   const speed = 2 * Math.PI / TURN_SECONDS;
 
@@ -33,9 +39,13 @@ export function createDesignPhysics(C, shapes) {
     body.velocity.set(0, 0, 0); body.angularVelocity.set(0, 0, 0);
     body.force.set(0, 0, 0); body.torque.set(0, 0, 0);
   }
-  function applyImpulse(point, impulse) {
+  function applyImpulse(point, impulse, { carryTurn = false } = {}) {
     const p = new C.Vec3(point.x, point.y, point.z).vsub(body.position);
     body.applyImpulse(new C.Vec3(impulse.x, impulse.y, impulse.z), p);
+    if (carryTurn) {
+      rest.vmult(axis, motorVelocity);
+      phase = (phase + clamp(body.angularVelocity.dot(motorVelocity) * .30, -.8, .8) + Math.PI * 2) % (Math.PI * 2);
+    }
     released = elapsed;
   }
   function spinImpulse(amount) {
@@ -62,13 +72,37 @@ export function createDesignPhysics(C, shapes) {
     if (rotation) dragTarget.set(rotation.x, rotation.y, rotation.z, rotation.w);
   }
   function endDrag(cancelled = false) {
-    if (constraint) { world.removeConstraint(constraint); constraint = null; released = elapsed; }
+    if (constraint) { world.removeConstraint(constraint); constraint = null; released = elapsed; adoptTurn(); }
     if (cancelled) zeroVelocity();
   }
   function rotateManual(x, y) {
     const turn = new C.Quaternion().setFromEuler(x, y, 0, 'XYZ');
     body.quaternion.mult(turn, body.quaternion); body.quaternion.normalize();
+    boundTilt();
+    adoptTurn();
     zeroVelocity();
+  }
+  function adoptTurn() {
+    restInverse.mult(body.quaternion, relative);
+    phase = (2 * Math.atan2(relative.y, relative.w) + Math.PI * 2) % (Math.PI * 2);
+  }
+  function boundTilt() {
+    // Free full turns about the word's own axis, with a restrained physical
+    // wobble. The swing/twist split avoids Euler-angle jumps at 180 degrees.
+    restInverse.mult(body.quaternion, relative);
+    const twistLength = Math.hypot(relative.y, relative.w);
+    if (twistLength > 1e-7) twist.set(0, relative.y / twistLength, 0, relative.w / twistLength);
+    else twist.setFromAxisAngle(axis, phase);
+    twist.conjugate(twistInverse); relative.mult(twistInverse, swing);
+    if (swing.w < 0) swing.set(-swing.x, -swing.y, -swing.z, -swing.w);
+    const sin = Math.hypot(swing.x, swing.y, swing.z);
+    const angle = 2 * Math.atan2(sin, Math.max(0, swing.w));
+    if (angle <= MAX_SWING || sin < 1e-7) return;
+    swingAxis.set(swing.x / sin, swing.y / sin, swing.z / sin);
+    swing.setFromAxisAngle(swingAxis, MAX_SWING); swing.mult(twist, limited); rest.mult(limited, body.quaternion);
+    rest.vmult(swingAxis, worldSwingAxis);
+    const outward = body.angularVelocity.dot(worldSwingAxis);
+    if (outward > 0) { worldSwingAxis.scale(outward, worldSwingAxis); body.angularVelocity.vsub(worldSwingAxis, body.angularVelocity); }
   }
   function step(dt, auto = true) {
     // No catch-up after suspension. Substeps are stable under a slow GPU.
@@ -102,6 +136,16 @@ export function createDesignPhysics(C, shapes) {
       const linearSpeed = body.velocity.length();
       if (linearSpeed > 3) body.velocity.scale(3 / linearSpeed, body.velocity);
       world.step(h);
+      boundTilt();
+      // Reserve one small, fixed movement envelope instead of moving the camera
+      // away whenever a push or a long drag tips the word towards the frame.
+      const displacement = body.position.length();
+      if (displacement > MAX_TRANSLATION) {
+        body.position.scale(MAX_TRANSLATION / displacement, body.position);
+        body.position.scale(1 / MAX_TRANSLATION, local);
+        const outward = body.velocity.dot(local);
+        if (outward > 0) { local.scale(outward, local); body.velocity.vsub(local, body.velocity); }
+      }
       body.quaternion.normalize();
     }
   }
