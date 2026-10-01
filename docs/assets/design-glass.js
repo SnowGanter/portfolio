@@ -5,6 +5,14 @@ export const REVERSE_FACE_OPACITY = .12;
 export const GLASS_CAP_OPACITY = .08;
 export const GLASS_SIDE_OPACITY = .34;
 export const GLASS_FILM_OPACITY = .045;
+export const GLASS_FLOW_SECONDS = 14;
+
+// Active-frame time only: pausing/offscreen never catches up in a colour jump.
+export function advanceGlassFlow(phase, delta) {
+  const dt = Number.isFinite(delta) ? Math.max(0, Math.min(delta, .05)) : 0;
+  return (phase + dt * Math.PI * 2 / GLASS_FLOW_SECONDS) % (Math.PI * 2);
+}
+
 export function createDesignGlass(THREE, renderer, geometries, letterPositions) {
   const shellScene = new THREE.Scene(), faceScene = new THREE.Scene(), finalScene = new THREE.Scene();
   const shellGroup = new THREE.Group(), faceGroup = new THREE.Group();
@@ -22,8 +30,8 @@ export function createDesignGlass(THREE, renderer, geometries, letterPositions) 
   const hidden = new THREE.MeshBasicMaterial(); hidden.visible = false;
   const glass = new THREE.ShaderMaterial({ toneMapped: false, blending: THREE.NoBlending,
     depthWrite: true, depthTest: true,
-    uniforms: { phase: { value: 0 }, capOpacity: {value:GLASS_CAP_OPACITY}, sideOpacity: {value:GLASS_SIDE_OPACITY}, filmOpacity: {value:GLASS_FILM_OPACITY}, ice: { value: new THREE.Color(0x94b8eb) },
-      violet: { value: new THREE.Color(0xb0a0dd) }, lilac: { value: new THREE.Color(0xd8bce4) } },
+    uniforms: { phase: { value: 0 }, flow: { value: 0 }, capOpacity: {value:GLASS_CAP_OPACITY}, sideOpacity: {value:GLASS_SIDE_OPACITY}, filmOpacity: {value:GLASS_FILM_OPACITY}, ice: { value: new THREE.Color(0x84afe8) },
+      violet: { value: new THREE.Color(0xa795db) }, lilac: { value: new THREE.Color(0xd1adde) } },
     vertexShader: `varying vec3 worldPosition; varying float capFacing; varying vec3 viewNormal;
       void main() {
         vec4 world = modelMatrix * vec4(position, 1.0);
@@ -32,17 +40,17 @@ export function createDesignGlass(THREE, renderer, geometries, letterPositions) 
         viewNormal = normalMatrix * normal;
         gl_Position = projectionMatrix * viewMatrix * world;
       }`,
-    fragmentShader: `uniform float phase; uniform float capOpacity; uniform float sideOpacity; uniform float filmOpacity;
+    fragmentShader: `uniform float phase; uniform float flow; uniform float capOpacity; uniform float sideOpacity; uniform float filmOpacity;
       uniform vec3 ice; uniform vec3 violet; uniform vec3 lilac;
       varying vec3 worldPosition; varying float capFacing; varying vec3 viewNormal;
       void main() {
-        // Integer angular frequencies make the colour loop seamless at 360°.
-        float sweep = 0.5 + 0.5 * sin(worldPosition.x * 0.55 + worldPosition.y * 1.2 + phase);
-        float glow = smoothstep(-0.8, 0.9, worldPosition.y + sin(phase) * 0.22);
+        // Both angular response and the slow travelling film loop seamlessly.
+        float sweep = 0.5 + 0.5 * sin(worldPosition.x * 0.55 + worldPosition.y * 1.2 + phase + flow);
+        float glow = smoothstep(-0.8, 0.9, worldPosition.y + sin(phase + flow) * 0.32);
         vec3 color = mix(mix(ice, violet, sweep), lilac, glow * 0.55);
         float incidence = 1.0 - abs(normalize(viewNormal).z);
-        float film = pow(0.5 + 0.5 * sin(worldPosition.x * 0.8 + worldPosition.y * 2.0 + phase * 2.0 + incidence * 0.8), 3.0);
-        vec3 surfaceColor = mix(ice, lilac, 0.5 + 0.5 * sin(worldPosition.y * 2.0 - phase));
+        float film = pow(0.5 + 0.5 * sin(worldPosition.x * 0.8 + worldPosition.y * 2.0 + phase * 2.0 - flow + incidence * 0.8), 3.0);
+        vec3 surfaceColor = mix(ice, lilac, 0.5 + 0.5 * sin(worldPosition.y * 2.0 - phase + flow));
         color = mix(color, surfaceColor, film * 0.5);
         float grain = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
         gl_FragColor = vec4(color + grain * 0.008, mix(sideOpacity, capOpacity, capFacing) + film * filmOpacity);
@@ -81,6 +89,8 @@ export function createDesignGlass(THREE, renderer, geometries, letterPositions) 
   finalScene.add(new THREE.Mesh(quad, composite));
   const finalCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 2); finalCamera.position.z = 1;
   return { letters,
+    get flow() { return glass.uniforms.flow.value; },
+    advance(delta) { glass.uniforms.flow.value = advanceGlassFlow(glass.uniforms.flow.value, delta); },
     resize(w, h) {
       const ratio = renderer.getPixelRatio();
       shellTarget.setSize(Math.max(1, Math.floor(w * ratio)), Math.max(1, Math.floor(h * ratio)));

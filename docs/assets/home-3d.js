@@ -1,6 +1,6 @@
-import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=065ecc874776';
-import { separateDesignSurfaces, DESIGN_SHAPE, DESIGN_TRACKING, DESIGN_KERNING, getDesignFraming } from './design-geometry.js?v=065ecc874776';
-import { createDesignGlass } from './design-glass.js?v=065ecc874776';
+import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=9cb446ae12fc';
+import { separateDesignSurfaces, DESIGN_SHAPE, DESIGN_TRACKING, DESIGN_KERNING, getDesignFraming } from './design-geometry.js?v=9cb446ae12fc';
+import { createDesignGlass } from './design-glass.js?v=9cb446ae12fc';
 
 const stage = document.querySelector('[data-design-stage]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -43,8 +43,8 @@ async function initialize(stage) {
     const probe = document.createElement('canvas').getContext('webgl2');
     if (!probe) return fallback();
     probe.getExtension('WEBGL_lose_context')?.loseContext();
-    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=065ecc874776'), import('./vendor/cannon.js?v=065ecc874776')]);
-    const response = await fetch(new URL('./fonts/design.typeface.json?v=065ecc874776', import.meta.url), { signal: AbortSignal.timeout(12000) });
+    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=9cb446ae12fc'), import('./vendor/cannon.js?v=9cb446ae12fc')]);
+    const response = await fetch(new URL('./fonts/design.typeface.json?v=9cb446ae12fc', import.meta.url), { signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('Font unavailable');
     const font = new THREE.FontLoader().parse(await response.json());
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -90,6 +90,7 @@ async function initialize(stage) {
       canvas.dataset.frameWidth = (camera.right - camera.left).toFixed(4);
       canvas.dataset.wordFill = (width / (camera.right - camera.left)).toFixed(4);
       canvas.dataset.glassMode = 'single-exterior-depth-composite';
+      canvas.dataset.glassFlow = glassRenderer.flow.toFixed(4);
       canvas.setAttribute('aria-pressed', String(paused || reduced.matches));
     };
     const stop = () => {
@@ -99,7 +100,8 @@ async function initialize(stage) {
     const tick = (time) => {
       frame = 0;
       if (!enabled()) return stop();
-      physics.step(previous ? (time - previous) / 1000 : 1 / 60); previous = time;
+      const delta = previous ? clamp((time - previous) / 1000, 0, .05) : 1 / 60;
+      physics.step(delta); glassRenderer.advance(delta); previous = time;
       paint(); stage.dataset.designState = drag ? 'dragging' : 'rotating';
       frame = requestAnimationFrame(tick);
     };
