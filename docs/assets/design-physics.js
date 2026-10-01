@@ -1,10 +1,12 @@
 // Renderer-independent rigid-body simulation. Impulses act at the raycast point,
-// dragging uses a physical point constraint, and a soft motor drives an 18s turn.
-export const TURN_SECONDS = 18;
-export const CLICK_IMPULSE = Object.freeze({ x: 0, y: .2, z: -10.4 });
+// A compact, full-width composition: free axial turns with a small pitch/roll.
+export const TURN_SECONDS = 9;
+export const CLICK_IMPULSE = Object.freeze({ x: 0, y: .4, z: -20.8 });
 export const MAX_TRANSLATION = .55;
-export const MAX_SWING = .28;
-export const REST_TILT_BOUND = .22;
+export const MAX_HORIZONTAL_TRANSLATION = .12;
+export const MAX_VERTICAL_TRANSLATION = .04;
+export const MAX_SWING = .02;
+export const REST_TILT_BOUND = 0;
 export const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
 export const canAnimate = ({ reduced, paused, visible, hidden, ready }) => ready && visible && !hidden && !reduced && !paused;
 
@@ -16,7 +18,7 @@ export function createDesignPhysics(C, shapes) {
   world.addBody(body);
   const anchor = new C.Body({ type: C.Body.KINEMATIC, collisionFilterMask: 0 });
   world.addBody(anchor);
-  const rest = new C.Quaternion().setFromEuler(-.20, -.36, -.055, 'XYZ');
+  const rest = new C.Quaternion();
   const target = rest.clone(), dragTarget = rest.clone(), spin = new C.Quaternion(), inverse = new C.Quaternion(), error = new C.Quaternion();
   const axis = new C.Vec3(0, 1, 0), motorVelocity = new C.Vec3();
   const acceleration = new C.Vec3(), local = new C.Vec3(), torque = new C.Vec3();
@@ -45,7 +47,7 @@ export function createDesignPhysics(C, shapes) {
     body.applyImpulse(new C.Vec3(impulse.x, impulse.y, impulse.z), p);
     if (carryTurn) {
       rest.vmult(axis, motorVelocity);
-      phase = (phase + clamp(body.angularVelocity.dot(motorVelocity) * .30, -.8, .8) + Math.PI * 2) % (Math.PI * 2);
+      phase = (phase + clamp(body.angularVelocity.dot(motorVelocity) * .30, -1.6, 1.6) + Math.PI * 2) % (Math.PI * 2);
     }
     released = elapsed;
   }
@@ -133,11 +135,11 @@ export function createDesignPhysics(C, shapes) {
         body.quaternion.vmult(local, torque); body.torque.vadd(torque, body.torque);
       }
       const angularSpeed = body.angularVelocity.length();
-      if (angularSpeed > 3.2) body.angularVelocity.scale(3.2 / angularSpeed, body.angularVelocity);
+      if (angularSpeed > 6.4) body.angularVelocity.scale(6.4 / angularSpeed, body.angularVelocity);
       const linearSpeed = body.velocity.length();
       // Let the doubled click impulse act before damping, while keeping long
       // drags and repeated clicks bounded by the same translation envelope.
-      if (linearSpeed > 6) body.velocity.scale(6 / linearSpeed, body.velocity);
+      if (linearSpeed > 12) body.velocity.scale(12 / linearSpeed, body.velocity);
       world.step(h);
       boundTilt();
       // Reserve one small, fixed movement envelope instead of moving the camera
@@ -148,6 +150,12 @@ export function createDesignPhysics(C, shapes) {
         body.position.scale(1 / MAX_TRANSLATION, local);
         const outward = body.velocity.dot(local);
         if (outward > 0) { local.scale(outward, local); body.velocity.vsub(local, body.velocity); }
+      }
+      for (const [key, limit] of [['x', MAX_HORIZONTAL_TRANSLATION], ['y', MAX_VERTICAL_TRANSLATION]]) {
+        if (Math.abs(body.position[key]) > limit) {
+          body.position[key] = Math.sign(body.position[key]) * limit;
+          if (body.velocity[key] * body.position[key] > 0) body.velocity[key] = 0;
+        }
       }
       body.quaternion.normalize();
     }

@@ -1,5 +1,6 @@
-import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=5750cf11a252';
-import { separateDesignSurfaces, DESIGN_SHAPE, DESIGN_TRACKING, DESIGN_KERNING, getDesignFraming } from './design-geometry.js?v=5750cf11a252';
+import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=065ecc874776';
+import { separateDesignSurfaces, DESIGN_SHAPE, DESIGN_TRACKING, DESIGN_KERNING, getDesignFraming } from './design-geometry.js?v=065ecc874776';
+import { createDesignGlass } from './design-glass.js?v=065ecc874776';
 
 const stage = document.querySelector('[data-design-stage]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -25,8 +26,8 @@ if (stage) initialize(stage).catch(() => {});
 
 async function initialize(stage) {
   const canvas = stage.querySelector('canvas');
-  let renderer, environment, observer, resizeObserver, physics;
-  const geometries = [], materials = [];
+  let renderer, glassRenderer, observer, resizeObserver, physics;
+  const geometries = [];
   let frame = 0, previous = 0, visible = true, paused = false, ready = false, failed = false;
   let drag = null, hoverTime = 0, hoverPoint = null;
   const enabled = () => canAnimate({ reduced: reduced.matches, paused, visible, hidden: document.hidden, ready });
@@ -36,47 +37,22 @@ async function initialize(stage) {
     stage.dataset.designState = 'fallback'; stage.classList.remove('is-3d-ready');
     canvas.hidden = true; canvas.tabIndex = -1;
     observer?.disconnect(); resizeObserver?.disconnect();
-    geometries.forEach((g) => g.dispose()); materials.forEach((m) => m.dispose());
-    environment?.dispose(); renderer?.dispose();
+    glassRenderer?.dispose(); geometries.forEach((g) => g.dispose()); renderer?.dispose();
   };
   try {
     const probe = document.createElement('canvas').getContext('webgl2');
     if (!probe) return fallback();
     probe.getExtension('WEBGL_lose_context')?.loseContext();
-    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=5750cf11a252'), import('./vendor/cannon.js?v=5750cf11a252')]);
-    const response = await fetch(new URL('./fonts/design.typeface.json?v=5750cf11a252', import.meta.url), { signal: AbortSignal.timeout(12000) });
+    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=065ecc874776'), import('./vendor/cannon.js?v=065ecc874776')]);
+    const response = await fetch(new URL('./fonts/design.typeface.json?v=065ecc874776', import.meta.url), { signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('Font unavailable');
     const font = new THREE.FontLoader().parse(await response.json());
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
     renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
     renderer.setClearColor(0x000000, 0); renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .95;
-    const scene = new THREE.Scene();
-    // Studio reflections light only the geometry: no backdrop, floor or halo.
-    const studio = new THREE.RoomEnvironment();
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    environment = pmrem.fromScene(studio, .06, .1, 100, { size: 128 });
-    scene.environment = environment.texture; scene.environmentIntensity = .18;
-    studio.dispose(); pmrem.dispose();
-    // Graphic colour, not glossy paint: lighting must never wash blue to white.
-    // The same front cap remains visible through the colourless back. Its depth
-    // participates in the scene normally, rather than an always-on-top overlay.
-    const front = new THREE.MeshBasicMaterial({ color: 0x304cde, toneMapped: false,
-      side: THREE.DoubleSide, forceSinglePass: true,
-      transparent: true, opacity: .86, depthWrite: true, depthTest: true });
-    const glass = new THREE.MeshPhysicalMaterial({ color: 0x9c9c9c, roughness: .48, metalness: 0,
-      ior: 1.2, specularIntensity: .08, clearcoat: 0, envMapIntensity: .15,
-      transparent: true, opacity: 1, depthWrite: false });
-    // Keep only exterior-facing surfaces. The centre is almost clear; grazing
-    // angles catch the studio light, describing a single solid glass silhouette.
-    glass.onBeforeCompile = (shader) => {
-      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
-        'diffuseColor.a *= mix(0.055, 0.30, pow(1.0 - abs(dot(normal, geometryViewDir)), 2.0));\n#include <opaque_fragment>');
-    };
-    glass.customProgramCacheKey = () => 'design-soft-outer-surface-v2';
-    materials.push(front, glass);
-    const group = new THREE.Group(); scene.add(group);
-    const letters = [], shapes = [];
+    const group = new THREE.Group();
+    const letterPositions = [], shapes = [];
     let cursor = 0, height = 0, depth = 0, previousCharacter = '';
     for (const character of 'DESIGN') {
       const geometry = new THREE.TextGeometry(character, { font, ...DESIGN_SHAPE });
@@ -87,32 +63,33 @@ async function initialize(stage) {
       const w = b.max.x - b.min.x, h = b.max.y - b.min.y, d = b.max.z - b.min.z;
       height = Math.max(height, h); depth = Math.max(depth, d);
       geometry.translate(-(b.max.x + b.min.x) / 2, -(b.max.y + b.min.y) / 2, -(b.max.z + b.min.z) / 2);
-      const mesh = new THREE.Mesh(geometry, materials);
       cursor += DESIGN_KERNING[previousCharacter + character] || 0;
-      mesh.position.x = cursor + w / 2; cursor += w + DESIGN_TRACKING;
+      const x = cursor + w / 2; cursor += w + DESIGN_TRACKING;
       previousCharacter = character;
-      letters.push(mesh); group.add(mesh);
-      shapes.push({ half: [w / 2, h / 2, d / 2], center: [mesh.position.x, 0, 0] });
+      letterPositions.push(x);
+      shapes.push({ half: [w / 2, h / 2, d / 2], center: [x, 0, 0] });
     }
     const width = cursor - DESIGN_TRACKING;
-    letters.forEach((mesh) => { mesh.position.x -= width / 2; });
+    letterPositions.forEach((x, i) => { letterPositions[i] = x - width / 2; });
     shapes.forEach((shape) => { shape.center[0] -= width / 2; });
     physics = createDesignPhysics(C, shapes);
-    const camera = new THREE.PerspectiveCamera(30, 1, .1, 100);
-    const key = new THREE.DirectionalLight(0xffffff, .7); key.position.set(-4, 7, 8); scene.add(key);
-    const fill = new THREE.DirectionalLight(0xffffff, .4); fill.position.set(6, 2, -4); scene.add(fill);
-    scene.add(new THREE.AmbientLight(0xffffff, .75));
+    glassRenderer = createDesignGlass(THREE, renderer, geometries, letterPositions);
+    const letters = glassRenderer.letters;
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 100);
     const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
     const handlePoint = new THREE.Vector3(), handleRotation = new THREE.Quaternion();
     const paint = () => {
       if (!ready || failed) return;
       const { position: p, quaternion: q } = physics.body;
       group.position.set(p.x, p.y, p.z); group.quaternion.set(q.x, q.y, q.z, q.w);
-      renderer.render(scene, camera);
+      glassRenderer.paint(camera, group.position, group.quaternion);
       canvas.dataset.pose = [q.x, q.y, q.z, q.w].map((n) => n.toFixed(4)).join(',');
       canvas.dataset.phase = physics.phase.toFixed(4);
       canvas.dataset.position = [p.x, p.y, p.z].map((n) => n.toFixed(4)).join(',');
       canvas.dataset.cameraDistance = camera.position.z.toFixed(4);
+      canvas.dataset.frameWidth = (camera.right - camera.left).toFixed(4);
+      canvas.dataset.wordFill = (width / (camera.right - camera.left)).toFixed(4);
+      canvas.dataset.glassMode = 'single-exterior-depth-composite';
       canvas.setAttribute('aria-pressed', String(paused || reduced.matches));
     };
     const stop = () => {
@@ -133,10 +110,11 @@ async function initialize(stage) {
     const resize = () => {
       const { width: w, height: h } = canvas.getBoundingClientRect();
       if (!w || !h || failed) return;
-      camera.aspect = w / h;
-      const framing = getDesignFraming({ width, height, depth, aspect: camera.aspect, movement: MAX_TRANSLATION, tilt: MAX_SWING + REST_TILT_BOUND, fov: camera.fov });
+      const framing = getDesignFraming({ width, height, depth, aspect: w / h, movement: MAX_TRANSLATION, tilt: MAX_SWING + REST_TILT_BOUND });
+      camera.left = -framing.halfWidth; camera.right = framing.halfWidth;
+      camera.top = framing.halfHeight; camera.bottom = -framing.halfHeight;
       camera.position.set(0, 0, framing.distance);
-      camera.updateProjectionMatrix(); renderer.setSize(w, h, false); paint();
+      camera.updateProjectionMatrix(); renderer.setSize(w, h, false); glassRenderer.resize(w, h); paint();
     };
     const setRay = (event) => {
       const rect = canvas.getBoundingClientRect();
