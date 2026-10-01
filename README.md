@@ -1,6 +1,6 @@
 # portfolio
 
-Design portfolio: Etsy, Amazon A+, Photoshop Scripts, ComfyUI.
+Design portfolio: Etsy, Amazon A+, Photoshop Scripts, ComfyUI, Packaging, UX/UI.
 
 Website: **https://cv-designer.me/**.
 
@@ -9,10 +9,16 @@ English is the default at [the portfolio](https://cv-designer.me/).
 [Russian](https://cv-designer.me/ru/) are available through
 the EN / UK / RU switch. Project and filter context is retained.
 
-Sections use clean URLs: `/etsy/`, `/amazon/`, `/photoshop/`, `/comfyui/`.
-Case studies live at `/projects/slug/`, also within `/uk/` and `/ru/`.
+Sections use clean URLs: `/etsy/`, `/amazon/`, `/photoshop/`, `/comfyui/`,
+`/packaging/`, `/ux-ui/`. Case studies live at `/projects/slug/`,
+`/packaging/slug/` and `/ux-ui/slug/`, also within `/uk/` and `/ru/`.
 Previous `.html` bookmarks redirect with their query and fragment intact.
 The homepage DESIGN gently sways left/right; an explicit push triggers a full turn.
+
+Packaging includes eight interactive volumetric mockups with animated artwork
+switching. UX/UI opens three working, sandboxed sample websites with persistent
+portfolio controls. These new sample designs and fictional brands are explicitly
+labelled interaction concepts, not client commissions or confirmed owner work.
 
 The legacy project URL redirects to the custom domain. The additional
 `snowganter.github.io` entry point is maintained separately in
