@@ -1,4 +1,4 @@
-import { createDesignPhysics, canAnimate, clamp } from './design-physics.js?v=c0e36f76d03c';
+import { createDesignPhysics, canAnimate, clamp } from './design-physics.js?v=4807a5f38e08';
 
 const stage = document.querySelector('[data-design-stage]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -42,8 +42,8 @@ async function initialize(stage) {
     const probe = document.createElement('canvas').getContext('webgl2');
     if (!probe) return fallback();
     probe.getExtension('WEBGL_lose_context')?.loseContext();
-    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=c0e36f76d03c'), import('./vendor/cannon.js?v=c0e36f76d03c')]);
-    const response = await fetch(new URL('./fonts/design.typeface.json?v=c0e36f76d03c', import.meta.url), { signal: AbortSignal.timeout(12000) });
+    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=4807a5f38e08'), import('./vendor/cannon.js?v=4807a5f38e08')]);
+    const response = await fetch(new URL('./fonts/design.typeface.json?v=4807a5f38e08', import.meta.url), { signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('Font unavailable');
     const font = new THREE.FontLoader().parse(await response.json());
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });

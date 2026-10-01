@@ -1,4 +1,4 @@
-@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=c0e36f76d03c') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=4807a5f38e08') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
 :root {
   color-scheme: light;
   --paper: #f7f8fa;
@@ -123,7 +123,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 @media (hover: hover) { .home-selected .work-card:hover { transform: translateY(-3px); } }
 .home-discipline { margin-block: 48px 0; font-size: 12px; color: var(--muted); }
 @media (max-width: 900px) {
-  .hero-bottom { grid-template-columns: 1fr 1fr; }
+  .hero-bottom { grid-template-columns: 1fr 1fr; align-items: start; }
   .hero-masthead > span:last-child { max-width: 170px; font-size: 10px; }
   .home-skills { gap: 24px; }
   .home-workflow { gap: 30px; }
