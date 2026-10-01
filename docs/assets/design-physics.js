@@ -1,13 +1,13 @@
 // Renderer-independent rigid-body simulation. Impulses act at the raycast point,
-// dragging uses a physical point constraint, and a soft motor drives a 42s turn.
-export const TURN_SECONDS = 42;
+// dragging uses a physical point constraint, and a soft motor drives a 30s turn.
+export const TURN_SECONDS = 30;
 export const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
 export const canAnimate = ({ reduced, paused, visible, hidden, ready }) => ready && visible && !hidden && !reduced && !paused;
 
 export function createDesignPhysics(C, shapes) {
   const world = new C.World({ gravity: new C.Vec3(0, 0, 0), allowSleep: false });
   world.solver.iterations = 12;
-  const body = new C.Body({ mass: 1.4, linearDamping: .55, angularDamping: .25, collisionFilterMask: 0 });
+  const body = new C.Body({ mass: 1.8, linearDamping: .45, angularDamping: .25, collisionFilterMask: 0 });
   for (const s of shapes) body.addShape(new C.Box(new C.Vec3(...s.half)), new C.Vec3(...s.center));
   world.addBody(body);
   const anchor = new C.Body({ type: C.Body.KINEMATIC, collisionFilterMask: 0 });
@@ -36,6 +36,16 @@ export function createDesignPhysics(C, shapes) {
   function applyImpulse(point, impulse) {
     const p = new C.Vec3(point.x, point.y, point.z).vsub(body.position);
     body.applyImpulse(new C.Vec3(impulse.x, impulse.y, impulse.z), p);
+    released = elapsed;
+  }
+  function spinImpulse(amount) {
+    amount = clamp(amount, -1.2, 1.2);
+    // Wheel input supplies angular momentum and advances the motor target,
+    // avoiding a spring-back to the pre-scroll angle.
+    body.quaternion.vmult(axis, motorVelocity);
+    motorVelocity.scale(amount, motorVelocity);
+    body.angularVelocity.vadd(motorVelocity, body.angularVelocity);
+    phase = (phase + amount * .8 + Math.PI * 2) % (Math.PI * 2);
     released = elapsed;
   }
   function beginDrag(point) {
@@ -76,9 +86,11 @@ export function createDesignPhysics(C, shapes) {
         if (error.w < 0) { error.x *= -1; error.y *= -1; error.z *= -1; error.w *= -1; }
         const sin = Math.hypot(error.x, error.y, error.z);
         const angle = 2 * Math.atan2(sin, Math.max(0, error.w));
-        const gain = constraint ? 36 : elapsed - released < 1.2 ? 2.8 : 7;
+        const recovery = clamp((elapsed - released) / 1.8, 0, 1);
+        const smooth = recovery * recovery * (3 - 2 * recovery);
+        const gain = constraint ? 36 : 2.6 + smooth * 4.4;
         rest.vmult(axis, motorVelocity); motorVelocity.scale(auto && !constraint ? speed : 0, motorVelocity);
-        const damping = constraint ? 8 : 3.5;
+        const damping = constraint ? 8 : 2.2 + smooth * 1.3;
         for (const key of ['x', 'y', 'z']) acceleration[key] = (sin > 1e-6 ? error[key] / sin * angle * gain : 0) - (body.angularVelocity[key] - motorVelocity[key]) * damping;
         // Convert requested angular acceleration through the body's inertia.
         inverse.vmult(acceleration, local);
@@ -94,6 +106,6 @@ export function createDesignPhysics(C, shapes) {
     }
   }
   reset();
-  return { body, world, reset, zeroVelocity, applyImpulse, beginDrag, moveDrag, endDrag, rotateManual, step,
+  return { body, world, reset, zeroVelocity, applyImpulse, spinImpulse, beginDrag, moveDrag, endDrag, rotateManual, step,
     get phase() { return phase; }, get dragging() { return Boolean(constraint); } };
 }

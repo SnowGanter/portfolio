@@ -1,4 +1,5 @@
-import { createDesignPhysics, canAnimate, clamp } from './design-physics.js?v=4807a5f38e08';
+import { createDesignPhysics, canAnimate, clamp } from './design-physics.js?v=f7881c8bb529';
+import { separateDesignSurfaces } from './design-geometry.js?v=f7881c8bb529';
 
 const stage = document.querySelector('[data-design-stage]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -42,8 +43,8 @@ async function initialize(stage) {
     const probe = document.createElement('canvas').getContext('webgl2');
     if (!probe) return fallback();
     probe.getExtension('WEBGL_lose_context')?.loseContext();
-    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=4807a5f38e08'), import('./vendor/cannon.js?v=4807a5f38e08')]);
-    const response = await fetch(new URL('./fonts/design.typeface.json?v=4807a5f38e08', import.meta.url), { signal: AbortSignal.timeout(12000) });
+    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=f7881c8bb529'), import('./vendor/cannon.js?v=f7881c8bb529')]);
+    const response = await fetch(new URL('./fonts/design.typeface.json?v=f7881c8bb529', import.meta.url), { signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('Font unavailable');
     const font = new THREE.FontLoader().parse(await response.json());
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
@@ -57,8 +58,24 @@ async function initialize(stage) {
     environment = pmrem.fromScene(studio, .06, .1, 100, { size: 128 });
     scene.environment = environment.texture; scene.environmentIntensity = .45;
     studio.dispose(); pmrem.dispose();
-    materials.push(new THREE.MeshPhysicalMaterial({ color: 0x1938cd, roughness: .68, metalness: 0, clearcoat: .08, clearcoatRoughness: .5, envMapIntensity: .3 }),
-      new THREE.MeshPhysicalMaterial({ color: 0xcbd2df, roughness: .32, metalness: .1, clearcoat: .4, clearcoatRoughness: .3 }));
+    // One tinted front surface and one clear outer shell. No screen-space
+    // refraction: it displaced the blue layer and exposed phantom inner edges.
+    // DoubleSide is only for seeing the SAME front layer through the clear rear.
+    const front = new THREE.MeshPhysicalMaterial({ color: 0x1938cd, roughness: .23, metalness: 0,
+      clearcoat: .35, clearcoatRoughness: .13, envMapIntensity: .45,
+      side: THREE.DoubleSide, forceSinglePass: true,
+      transparent: true, opacity: .84, depthWrite: false, depthTest: false });
+    const glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .07, metalness: 0,
+      ior: 1.46, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: 1.2,
+      transparent: true, opacity: 1, depthWrite: false });
+    // Keep only exterior-facing surfaces. The centre is almost clear; grazing
+    // angles catch the studio light, describing a single solid glass silhouette.
+    glass.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
+        'diffuseColor.a *= mix(0.035, 0.42, pow(1.0 - abs(dot(normal, geometryViewDir)), 3.0));\n#include <opaque_fragment>');
+    };
+    glass.customProgramCacheKey = () => 'design-clear-outer-surface-v1';
+    materials.push(front, glass);
     const group = new THREE.Group(); scene.add(group);
     const letters = [], shapes = [];
     let cursor = 0, height = 0;
@@ -66,17 +83,26 @@ async function initialize(stage) {
       const geometry = new THREE.TextGeometry(character, { font, size: 2, depth: .72, curveSegments: 16,
         bevelEnabled: true, bevelThickness: .09, bevelSize: .065, bevelSegments: 6 });
       geometries.push(geometry); geometry.computeBoundingBox();
+      separateDesignSurfaces(geometry);
       const b = geometry.boundingBox;
       const w = b.max.x - b.min.x, h = b.max.y - b.min.y, d = b.max.z - b.min.z;
       height = Math.max(height, h);
       geometry.translate(-(b.max.x + b.min.x) / 2, -(b.max.y + b.min.y) / 2, -(b.max.z + b.min.z) / 2);
-      const mesh = new THREE.Mesh(geometry, materials);
-      mesh.position.x = cursor + w / 2; cursor += w + .09;
-      letters.push(mesh); group.add(mesh);
-      shapes.push({ half: [w / 2, h / 2, d / 2], center: [mesh.position.x, 0, 0] });
+      // Composite the blue surface after the exterior highlights. Shell walls
+      // must not show up as inner ribs across the coloured face viewed from back.
+      const faceGeometry = geometry.clone(); geometries.push(faceGeometry);
+      faceGeometry.groups = faceGeometry.groups.filter((g) => g.materialIndex === 0);
+      geometry.groups = geometry.groups.filter((g) => g.materialIndex === 1);
+      const shell = new THREE.Mesh(geometry, materials);
+      const face = new THREE.Mesh(faceGeometry, materials);
+      shell.renderOrder = 1; face.renderOrder = 2;
+      shell.position.x = face.position.x = cursor + w / 2; cursor += w + .09;
+      letters.push(shell, face); group.add(shell, face);
+      shapes.push({ half: [w / 2, h / 2, d / 2], center: [face.position.x, 0, 0] });
     }
     const width = cursor - .09;
-    letters.forEach((mesh, i) => { mesh.position.x -= width / 2; shapes[i].center[0] = mesh.position.x; });
+    letters.forEach((mesh) => { mesh.position.x -= width / 2; });
+    shapes.forEach((shape) => { shape.center[0] -= width / 2; });
     physics = createDesignPhysics(C, shapes);
     const camera = new THREE.PerspectiveCamera(30, 1, .1, 100);
     const key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(-4, 7, 8); scene.add(key);
@@ -140,6 +166,7 @@ async function initialize(stage) {
     };
     const hit = (event) => { setRay(event); return raycaster.intersectObjects(letters, false)[0]; };
     canvas.addEventListener('pointerdown', (event) => {
+      canvas.dataset.inputMode = 'pointer';
       if (!ready || event.button !== 0) return;
       const contact = hit(event);
       if (!contact) return;
@@ -154,11 +181,11 @@ async function initialize(stage) {
       if (!ready || failed) return;
       if (drag && event.pointerId === drag.id) {
         drag.moved ||= Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 5;
-        if (!enabled()) physics.rotateManual((event.clientY - drag.y) * .006, (event.clientX - drag.x) * .009);
+        if (!enabled()) physics.rotateManual((event.clientY - drag.y) * .0075, (event.clientX - drag.x) * .012);
         else {
           // The grabbed point follows a virtual trackball rather than a flat
           // screen plane, so sideways drags naturally turn the word in depth.
-          handleRotation.setFromEuler(new THREE.Euler((event.clientY - drag.startY) * .006, (event.clientX - drag.startX) * .009, 0));
+          handleRotation.setFromEuler(new THREE.Euler((event.clientY - drag.startY) * .0075, (event.clientX - drag.startX) * .012, 0));
           handleRotation.premultiply(drag.orientation);
           handlePoint.copy(drag.local).applyQuaternion(handleRotation).add(drag.origin);
           physics.moveDrag(handlePoint, handleRotation);
@@ -182,7 +209,7 @@ async function initialize(stage) {
       canvas.classList.remove('is-grabbing');
       if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       if (!cancelled && !current.moved) {
-        if (enabled()) physics.applyImpulse(current.point, { x: 0, y: .08, z: -2.8 });
+        if (enabled()) physics.applyImpulse(current.point, { x: 0, y: .1, z: -5.2 });
         else physics.rotateManual(0, .18);
       }
       if (!enabled()) physics.zeroVelocity();
@@ -191,15 +218,30 @@ async function initialize(stage) {
     canvas.addEventListener('pointerup', (e) => endDrag(e));
     canvas.addEventListener('pointercancel', (e) => endDrag(e, true));
     canvas.addEventListener('lostpointercapture', (e) => endDrag(e, true));
+    canvas.addEventListener('wheel', (event) => {
+      if (!ready || failed || drag || event.ctrlKey || !hit(event)) return;
+      // Never capture page scrolling over the empty part of the canvas, or a
+      // Ctrl+wheel / trackpad pinch used to zoom the browser.
+      const factor = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvas.clientHeight : 1;
+      const delta = (Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY) * factor;
+      if (Math.abs(delta) < .1) return;
+      event.preventDefault(); canvas.dataset.inputMode = 'pointer';
+      canvas.focus({ preventScroll: true });
+      const amount = clamp(delta * .006, -1.2, 1.2);
+      if (enabled()) physics.spinImpulse(amount); else physics.rotateManual(0, amount * .45);
+      paint(); wake();
+    }, { passive: false });
+    window.addEventListener('keydown', (event) => { if (event.key === 'Tab') canvas.dataset.inputMode = 'keyboard'; });
     canvas.addEventListener('keydown', (event) => {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Enter', 'Home', 'Escape'].includes(event.key)) return;
       event.preventDefault();
+      canvas.dataset.inputMode = 'keyboard';
       if (event.key === 'Home') physics.reset();
       else if (event.key === ' ' || event.key === 'Escape') {
         paused = event.key === 'Escape' || !paused;
         physics.endDrag(true); stop();
       } else if (event.key === 'Enter') {
-        if (enabled()) physics.applyImpulse({ x: width * .28, y: .15, z: .45 }, { x: 0, y: 0, z: -2.8 });
+        if (enabled()) physics.applyImpulse({ x: width * .28, y: .15, z: .45 }, { x: 0, y: 0, z: -5.2 });
         else physics.rotateManual(0, .18);
       } else {
         const vertical = event.key === 'ArrowUp' || event.key === 'ArrowDown';
