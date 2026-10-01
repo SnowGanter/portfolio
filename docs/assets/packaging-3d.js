@@ -1,5 +1,5 @@
-import * as T from './vendor/packaging-three.js?v=09e294e58bb1';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=09e294e58bb1';
+import * as T from './vendor/packaging-three.js?v=41770e7f7122';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=41770e7f7122';
 const root=document.querySelector('[data-packaging-viewer]');
 if(root) start(root);
 async function start(root) {
@@ -21,7 +21,12 @@ async function start(root) {
   });
   async function textures(index) {
     if(!textureCache.has(index)) textureCache.set(index,Promise.all(config.variants[index].faces.map(src=>new Promise((resolve,reject)=>{
-      new T.TextureLoader().load(src,t=>{t.colorSpace=T.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();resolve(t);},undefined,reject);
+      let settled=false;
+      const timer=setTimeout(()=>{settled=true;reject(new Error('Artwork load timeout'));},20000);
+      new T.TextureLoader().load(src,t=>{
+        if(settled){t.dispose();return;}settled=true;clearTimeout(timer);
+        t.colorSpace=T.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();resolve(t);
+      },undefined,error=>{if(settled)return;settled=true;clearTimeout(timer);reject(error);});
     }))).catch(error=>{textureCache.delete(index);throw error;}));
     return textureCache.get(index);
   }
@@ -65,13 +70,16 @@ async function start(root) {
   }
   async function change(index,record=true) {
     if(transition){queued={index,record};return;}
-    if(index===current)return;
+    if(index===current){
+      // Returning to the current skin also cancels an older in-flight load.
+      ++request;root.setAttribute('aria-busy','false');status.textContent=config.variants[current].name;return;
+    }
     const token=++request;root.setAttribute('aria-busy','true');status.textContent=config.strings.loading;
     try {
       const maps=await textures(index);if(token!==request||lost)return;
       for(let i=0;i<materials.length;i++)materials[i].userData.next.value=maps[i];
       transition={index,maps,elapsed:0,record};wake();
-    }catch{root.setAttribute('aria-busy','false');status.textContent=config.strings.textureFailed;}
+    }catch{if(token!==request||lost)return;root.setAttribute('aria-busy','false');status.textContent=config.strings.textureFailed;}
   }
   function fail(){
     lost=true;cancelAnimationFrame(raf);raf=0;root.dataset.ready='false';canvas.hidden=true;status.textContent=config.strings.failed;
@@ -104,7 +112,7 @@ async function start(root) {
     for(const button of controls)button.setAttribute('aria-pressed',String(Number(button.dataset.variant)===current));wake();
   }catch{fail();return;}
   new ResizeObserver(size).observe(stage);
-  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible){cancelAnimationFrame(raf);raf=0;last=0;}else wake();},{threshold:.05}).observe(stage);
+  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible&&!transition){cancelAnimationFrame(raf);raf=0;last=0;}else wake();},{threshold:.05}).observe(stage);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;last=0;}else wake();});
   window.addEventListener('popstate',()=>change(selected(),false));
   reduced.addEventListener('change',()=>{pose();render();wake();});
