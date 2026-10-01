@@ -2,6 +2,8 @@
 // Front-facing idle sway; full axial turns only follow an explicit push.
 export const SWAY_SECONDS = 12;
 export const SWAY_ANGLE = Math.PI / 10;
+export const FLOAT_HEIGHT = .028;
+export const FLOAT_PITCH = .012;
 export const TURN_SECONDS = 4.5; // Nominal pushed turn, with physical acceleration/braking.
 export const CLICK_IMPULSE = Object.freeze({ x: 0, y: .4, z: -20.8 });
 export const MAX_TRANSLATION = .55;
@@ -12,7 +14,44 @@ export const REST_TILT_BOUND = 0;
 export const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
 export const canAnimate = ({ reduced, paused, visible, hidden, ready }) => ready && visible && !hidden && !reduced && !paused;
 
-export function createDesignPhysics(C, shapes) {
+// Random targets, not random per-frame forces: each soft rise/fall has zero
+// velocity and acceleration at both ends. All values use active simulation time.
+export function createDesignFloat(random = Math.random) {
+  let height = 0, pitch = 0, heightVelocity = 0, pitchVelocity = 0;
+  let fromHeight = 0, fromPitch = 0, toHeight = 0, toPitch = 0, time = 0, duration = 0, direction = 1;
+  const sample = () => { const value = Number(random()); return Number.isFinite(value) ? clamp(value, 0, 1) : .5; };
+  function next() {
+    fromHeight = height; fromPitch = pitch;
+    toHeight = direction * FLOAT_HEIGHT * (.65 + sample() * .35);
+    toPitch = -direction * FLOAT_PITCH * (.6 + sample() * .4);
+    duration = 5.2 + sample() * 3;
+    direction *= -1;
+  }
+  function reset() {
+    height = pitch = heightVelocity = pitchVelocity = time = 0;
+    direction = sample() < .5 ? -1 : 1;
+    next();
+  }
+  function advance(dt) {
+    if (!Number.isFinite(dt) || dt <= 0) return;
+    time += Math.min(dt, .05);
+    while (time >= duration) {
+      time -= duration; height = toHeight; pitch = toPitch; next();
+    }
+    const t = time / duration;
+    const ease = t * t * t * (10 + t * (-15 + t * 6));
+    const velocity = 30 * t * t * (1 - t) * (1 - t) / duration;
+    height = fromHeight + (toHeight - fromHeight) * ease;
+    pitch = fromPitch + (toPitch - fromPitch) * ease;
+    heightVelocity = (toHeight - fromHeight) * velocity;
+    pitchVelocity = (toPitch - fromPitch) * velocity;
+  }
+  reset();
+  return { reset, advance, get height() { return height; }, get pitch() { return pitch; },
+    get heightVelocity() { return heightVelocity; }, get pitchVelocity() { return pitchVelocity; } };
+}
+
+export function createDesignPhysics(C, shapes, { random = Math.random } = {}) {
   const world = new C.World({ gravity: new C.Vec3(0, 0, 0), allowSleep: false });
   world.solver.iterations = 12;
   const body = new C.Body({ mass: 1.8, linearDamping: .45, angularDamping: .25, collisionFilterMask: 0 });
@@ -22,6 +61,7 @@ export function createDesignPhysics(C, shapes) {
   world.addBody(anchor);
   const rest = new C.Quaternion();
   const target = rest.clone(), dragTarget = rest.clone(), spin = new C.Quaternion(), inverse = new C.Quaternion(), error = new C.Quaternion();
+  const floatMotion = createDesignFloat(random), pitchTurn = new C.Quaternion(), pitchAxis = new C.Vec3(1, 0, 0);
   const axis = new C.Vec3(0, 1, 0), motorVelocity = new C.Vec3();
   const acceleration = new C.Vec3(), local = new C.Vec3(), torque = new C.Vec3();
   const restInverse = rest.conjugate();
@@ -56,6 +96,7 @@ export function createDesignPhysics(C, shapes) {
     endDrag(true);
     phase = 0; elapsed = 0; swayTime = 0; released = -10;
     turn = null; recoveryOffset = 0; recoveryTime = 10;
+    floatMotion.reset();
     body.position.set(0, 0, 0); body.velocity.set(0, 0, 0);
     body.angularVelocity.set(0, 0, 0); body.quaternion.copy(rest);
     body.force.set(0, 0, 0); body.torque.set(0, 0, 0);
@@ -136,6 +177,7 @@ export function createDesignPhysics(C, shapes) {
       let axialSpeed = 0;
       if (auto && !constraint) {
         swayTime += h;
+        floatMotion.advance(h);
         if (turn) {
           // Ease the last part of the revolution, leaving enough momentum to
           // cross 360° rather than asymptotically stopping just short of it.
@@ -149,9 +191,15 @@ export function createDesignPhysics(C, shapes) {
           axialSpeed = SWAY_ANGLE * swaySpeed * Math.cos(swayTime * swaySpeed) - drift / 1.6;
         }
       }
-      spin.setFromAxisAngle(axis, phase); rest.mult(spin, target);
+      spin.setFromAxisAngle(axis, phase);
+      pitchTurn.setFromAxisAngle(pitchAxis, auto && !constraint ? floatMotion.pitch : 0);
+      pitchTurn.mult(spin, spin); rest.mult(spin, target);
       // A spring holds the word in the composition without a visible support.
-      for (const key of ['x', 'y', 'z']) body.force[key] += body.mass * (-body.position[key] * 14 - body.velocity[key] * 5);
+      for (const key of ['x', 'y', 'z']) {
+        const position = key === 'y' && auto && !constraint ? floatMotion.height : 0;
+        const velocity = key === 'y' && auto && !constraint ? floatMotion.heightVelocity : 0;
+        body.force[key] += body.mass * ((position - body.position[key]) * 14 + (velocity - body.velocity[key]) * 5);
+      }
       {
         body.quaternion.conjugate(inverse); (constraint ? dragTarget : target).mult(inverse, error);
         if (error.w < 0) { error.x *= -1; error.y *= -1; error.z *= -1; error.w *= -1; }
@@ -161,6 +209,7 @@ export function createDesignPhysics(C, shapes) {
         const smooth = recovery * recovery * (3 - 2 * recovery);
         const gain = constraint ? 36 : 2.6 + smooth * 4.4;
         rest.vmult(axis, motorVelocity); motorVelocity.scale(axialSpeed, motorVelocity);
+        if (auto && !constraint) motorVelocity.x += floatMotion.pitchVelocity;
         const damping = constraint ? 8 : 2.2 + smooth * 1.3;
         for (const key of ['x', 'y', 'z']) acceleration[key] = (sin > 1e-6 ? error[key] / sin * angle * gain : 0) - (body.angularVelocity[key] - motorVelocity[key]) * damping;
         // Convert requested angular acceleration through the body's inertia.
@@ -205,6 +254,7 @@ export function createDesignPhysics(C, shapes) {
   }
   reset();
   return { body, world, reset, zeroVelocity, applyImpulse, spinImpulse, beginDrag, moveDrag, endDrag, rotateManual, step,
+    floatMotion,
     get phase() { return phase; }, get dragging() { return Boolean(constraint); },
     get motion() { return turn ? 'turning' : Math.abs(recoveryOffset * Math.exp(-recoveryTime / 1.6)) > .025 ? 'recovering' : 'swaying'; } };
 }
