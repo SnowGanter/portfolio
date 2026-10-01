@@ -24,6 +24,7 @@ export const DESIGN_SHAPE = Object.freeze({ size: 2, depth: .58, curveSegments: 
   bevelEnabled: true, bevelThickness: .10, bevelSize: .085, bevelSegments: 8 });
 export const DESIGN_TRACKING = .04;
 export const DESIGN_KERNING = Object.freeze({ DE: -.005, ES: -.025, SI: .01, IG: .005, GN: -.025 });
+export const DESIGN_FRAME_FILL = .96;
 
 // The complete word fits at every permitted orientation, even after a strong push. Only
 // viewport changes update this distance; animation never zooms the camera.
@@ -42,5 +43,5 @@ export function getDesignFraming({ width, height, depth, aspect, movement = .55,
     const projection = Math.max(minimum, Math.min(maximum, optimum));
     return horizontalRadius * Math.sqrt(Math.max(0, length * length - projection * projection)) + halfHeight * projection + movement * length;
   };
-  return { distance: Math.max(support(1 / Math.tan(vertical), 1), support(0, Math.hypot(1 / (Math.tan(vertical) * aspect), 1))) / .92, radius };
+  return { distance: Math.max(support(1 / Math.tan(vertical), 1), support(0, Math.hypot(1 / (Math.tan(vertical) * aspect), 1))) / DESIGN_FRAME_FILL, radius };
 }

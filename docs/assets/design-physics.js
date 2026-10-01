@@ -1,6 +1,7 @@
 // Renderer-independent rigid-body simulation. Impulses act at the raycast point,
-// dragging uses a physical point constraint, and a soft motor drives a 30s turn.
-export const TURN_SECONDS = 30;
+// dragging uses a physical point constraint, and a soft motor drives an 18s turn.
+export const TURN_SECONDS = 18;
+export const CLICK_IMPULSE = Object.freeze({ x: 0, y: .2, z: -10.4 });
 export const MAX_TRANSLATION = .55;
 export const MAX_SWING = .28;
 export const REST_TILT_BOUND = .22;
@@ -134,7 +135,9 @@ export function createDesignPhysics(C, shapes) {
       const angularSpeed = body.angularVelocity.length();
       if (angularSpeed > 3.2) body.angularVelocity.scale(3.2 / angularSpeed, body.angularVelocity);
       const linearSpeed = body.velocity.length();
-      if (linearSpeed > 3) body.velocity.scale(3 / linearSpeed, body.velocity);
+      // Let the doubled click impulse act before damping, while keeping long
+      // drags and repeated clicks bounded by the same translation envelope.
+      if (linearSpeed > 6) body.velocity.scale(6 / linearSpeed, body.velocity);
       world.step(h);
       boundTilt();
       // Reserve one small, fixed movement envelope instead of moving the camera
