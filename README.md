@@ -2,7 +2,15 @@
 
 Design portfolio: Etsy, Amazon A+, Photoshop Scripts, ComfyUI.
 
-Website: **https://snowganter.github.io/portfolio/**
+Website: **https://snowganter.github.io/** (redirects to the portfolio).
+
+English is the default at [the portfolio](https://snowganter.github.io/portfolio/).
+[Ukrainian](https://snowganter.github.io/portfolio/uk/) and
+[Russian](https://snowganter.github.io/portfolio/ru/) are available through
+the EN / UK / RU switch. Project and filter context is retained.
+
+The root entry point is maintained separately in
+[SnowGanter/SnowGanter.github.io](https://github.com/SnowGanter/SnowGanter.github.io).
 
 `docs/` contains the verified static release. GitHub Actions deploys this folder
 to GitHub Pages after every update to `main`.
