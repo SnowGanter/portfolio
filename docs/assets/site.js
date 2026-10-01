@@ -84,14 +84,15 @@
       try {
         const referrer = new URL(document.referrer);
         if (referrer.origin === location.origin) {
-          section = referrer.pathname.split("/").pop().replace(".html", "");
+          section = referrer.pathname.replace(/\/index\.html$/, '/').split("/").filter(Boolean).pop()?.replace(/\.html$/, "");
           category = referrer.searchParams.get("category");
         }
       } catch {}
     }
     if (!["etsy", "amazon", "photoshop", "comfyui"].includes(section)) return;
-    const base = document.querySelector(".site-header .main-nav a")?.pathname.replace(/[^/]+$/, "") || "/";
-    const destination = new URL(base + section + ".html", location.origin);
+    const sectionLink = Array.from(document.querySelectorAll('.site-header .main-nav a')).find((link) => link.pathname.endsWith('/' + section + '/'));
+    if (!sectionLink) return;
+    const destination = new URL(sectionLink.pathname, location.origin);
     if (section === "etsy" && ["all", "wallpaper", "painting"].includes(category)) destination.searchParams.set("category", category);
     for (const link of document.querySelectorAll("[data-case-back]")) link.href = destination.pathname + destination.search + destination.hash;
     for (const link of document.querySelectorAll("[data-case-next]")) {

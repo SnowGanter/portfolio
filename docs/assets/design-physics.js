@@ -1,6 +1,8 @@
 // Renderer-independent rigid-body simulation. Impulses act at the raycast point,
-// A compact, full-width composition: free axial turns with a small pitch/roll.
-export const TURN_SECONDS = 9;
+// Front-facing idle sway; full axial turns only follow an explicit push.
+export const SWAY_SECONDS = 12;
+export const SWAY_ANGLE = Math.PI / 10;
+export const TURN_SECONDS = 4.5; // Nominal pushed turn, with physical acceleration/braking.
 export const CLICK_IMPULSE = Object.freeze({ x: 0, y: .4, z: -20.8 });
 export const MAX_TRANSLATION = .55;
 export const MAX_HORIZONTAL_TRANSLATION = .12;
@@ -25,12 +27,35 @@ export function createDesignPhysics(C, shapes) {
   const restInverse = rest.conjugate();
   const relative = new C.Quaternion(), twist = new C.Quaternion(), twistInverse = new C.Quaternion(), swing = new C.Quaternion(), limited = new C.Quaternion();
   const swingAxis = new C.Vec3(), worldSwingAxis = new C.Vec3();
-  let phase = 0, elapsed = 0, released = -10, constraint = null;
+  let phase = 0, elapsed = 0, swayTime = 0, released = -10, constraint = null;
+  let turn = null, recoveryOffset = 0, recoveryTime = 10;
   const speed = 2 * Math.PI / TURN_SECONDS;
+  const swaySpeed = 2 * Math.PI / SWAY_SECONDS;
+  const wrap = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
+  const bodyYaw = () => { restInverse.mult(body.quaternion, relative); return 2 * Math.atan2(relative.y, relative.w); };
+  const sway = () => SWAY_ANGLE * Math.sin(swayTime * swaySpeed);
+
+  function recover(offset = wrap(bodyYaw() - sway())) {
+    turn = null;
+    recoveryOffset = offset; recoveryTime = 0;
+    phase = sway() + recoveryOffset;
+  }
+
+  function startTurn() {
+    rest.vmult(axis, motorVelocity);
+    const momentum = body.angularVelocity.dot(motorVelocity);
+    const direction = Math.abs(momentum) > .08 ? Math.sign(momentum) : 1;
+    // Measure the body's actual travel, not the motor phase. Even a central
+    // click with no lever arm must complete a revolution before returning.
+    turn = { direction, travel: 0, previousYaw: bodyYaw() };
+    phase = turn.previousYaw;
+    recoveryOffset = 0;
+  }
 
   function reset() {
     endDrag(true);
-    phase = 0; elapsed = 0; released = -10;
+    phase = 0; elapsed = 0; swayTime = 0; released = -10;
+    turn = null; recoveryOffset = 0; recoveryTime = 10;
     body.position.set(0, 0, 0); body.velocity.set(0, 0, 0);
     body.angularVelocity.set(0, 0, 0); body.quaternion.copy(rest);
     body.force.set(0, 0, 0); body.torque.set(0, 0, 0);
@@ -45,24 +70,22 @@ export function createDesignPhysics(C, shapes) {
   function applyImpulse(point, impulse, { carryTurn = false } = {}) {
     const p = new C.Vec3(point.x, point.y, point.z).vsub(body.position);
     body.applyImpulse(new C.Vec3(impulse.x, impulse.y, impulse.z), p);
-    if (carryTurn) {
-      rest.vmult(axis, motorVelocity);
-      phase = (phase + clamp(body.angularVelocity.dot(motorVelocity) * .30, -1.6, 1.6) + Math.PI * 2) % (Math.PI * 2);
-    }
+    if (carryTurn) startTurn();
     released = elapsed;
   }
   function spinImpulse(amount) {
     amount = clamp(amount, -1.2, 1.2);
-    // Wheel input supplies angular momentum and advances the motor target,
-    // avoiding a spring-back to the pre-scroll angle.
+    // Wheel input retains momentum and adopts the advanced angle before a
+    // gradual recovery; no instant spring-back to the pre-scroll pose.
     body.quaternion.vmult(axis, motorVelocity);
     motorVelocity.scale(amount, motorVelocity);
     body.angularVelocity.vadd(motorVelocity, body.angularVelocity);
-    phase = (phase + amount * .8 + Math.PI * 2) % (Math.PI * 2);
+    recover(wrap(bodyYaw() - sway()) + amount * .8);
     released = elapsed;
   }
   function beginDrag(point) {
     endDrag(true);
+    turn = null;
     const p = new C.Vec3(point.x, point.y, point.z);
     anchor.position.copy(p);
     dragTarget.copy(body.quaternion);
@@ -75,19 +98,15 @@ export function createDesignPhysics(C, shapes) {
     if (rotation) dragTarget.set(rotation.x, rotation.y, rotation.z, rotation.w);
   }
   function endDrag(cancelled = false) {
-    if (constraint) { world.removeConstraint(constraint); constraint = null; released = elapsed; adoptTurn(); }
+    if (constraint) { world.removeConstraint(constraint); constraint = null; released = elapsed; recover(); }
     if (cancelled) zeroVelocity();
   }
   function rotateManual(x, y) {
     const turn = new C.Quaternion().setFromEuler(x, y, 0, 'XYZ');
     body.quaternion.mult(turn, body.quaternion); body.quaternion.normalize();
     boundTilt();
-    adoptTurn();
+    recover();
     zeroVelocity();
-  }
-  function adoptTurn() {
-    restInverse.mult(body.quaternion, relative);
-    phase = (2 * Math.atan2(relative.y, relative.w) + Math.PI * 2) % (Math.PI * 2);
   }
   function boundTilt() {
     // Free full turns about the word's own axis, with a restrained physical
@@ -114,7 +133,22 @@ export function createDesignPhysics(C, shapes) {
     const h = total / count;
     for (let i = 0; i < count; i++) {
       elapsed += h;
-      if (auto && !constraint) phase = (phase + speed * h) % (Math.PI * 2);
+      let axialSpeed = 0;
+      if (auto && !constraint) {
+        swayTime += h;
+        if (turn) {
+          // Ease the last part of the revolution, leaving enough momentum to
+          // cross 360° rather than asymptotically stopping just short of it.
+          const remaining = Math.max(0, Math.PI * 2 - turn.travel);
+          axialSpeed = turn.direction * (.55 + (speed - .55) * clamp(remaining / .85, 0, 1));
+          phase = bodyYaw() + turn.direction * .10;
+        } else {
+          recoveryTime += h;
+          const drift = recoveryOffset * Math.exp(-recoveryTime / 1.6);
+          phase = sway() + drift;
+          axialSpeed = SWAY_ANGLE * swaySpeed * Math.cos(swayTime * swaySpeed) - drift / 1.6;
+        }
+      }
       spin.setFromAxisAngle(axis, phase); rest.mult(spin, target);
       // A spring holds the word in the composition without a visible support.
       for (const key of ['x', 'y', 'z']) body.force[key] += body.mass * (-body.position[key] * 14 - body.velocity[key] * 5);
@@ -126,7 +160,7 @@ export function createDesignPhysics(C, shapes) {
         const recovery = clamp((elapsed - released) / 1.8, 0, 1);
         const smooth = recovery * recovery * (3 - 2 * recovery);
         const gain = constraint ? 36 : 2.6 + smooth * 4.4;
-        rest.vmult(axis, motorVelocity); motorVelocity.scale(auto && !constraint ? speed : 0, motorVelocity);
+        rest.vmult(axis, motorVelocity); motorVelocity.scale(axialSpeed, motorVelocity);
         const damping = constraint ? 8 : 2.2 + smooth * 1.3;
         for (const key of ['x', 'y', 'z']) acceleration[key] = (sin > 1e-6 ? error[key] / sin * angle * gain : 0) - (body.angularVelocity[key] - motorVelocity[key]) * damping;
         // Convert requested angular acceleration through the body's inertia.
@@ -142,6 +176,15 @@ export function createDesignPhysics(C, shapes) {
       if (linearSpeed > 12) body.velocity.scale(12 / linearSpeed, body.velocity);
       world.step(h);
       boundTilt();
+      if (turn && auto && !constraint) {
+        const yaw = bodyYaw();
+        turn.travel += turn.direction * wrap(yaw - turn.previousYaw);
+        turn.previousYaw = yaw;
+        if (turn.travel >= Math.PI * 2) {
+          recover();
+          released = elapsed - 1.8;
+        }
+      }
       // Reserve one small, fixed movement envelope instead of moving the camera
       // away whenever a push or a long drag tips the word towards the frame.
       const displacement = body.position.length();
@@ -162,5 +205,6 @@ export function createDesignPhysics(C, shapes) {
   }
   reset();
   return { body, world, reset, zeroVelocity, applyImpulse, spinImpulse, beginDrag, moveDrag, endDrag, rotateManual, step,
-    get phase() { return phase; }, get dragging() { return Boolean(constraint); } };
+    get phase() { return phase; }, get dragging() { return Boolean(constraint); },
+    get motion() { return turn ? 'turning' : Math.abs(recoveryOffset * Math.exp(-recoveryTime / 1.6)) > .025 ? 'recovering' : 'swaying'; } };
 }

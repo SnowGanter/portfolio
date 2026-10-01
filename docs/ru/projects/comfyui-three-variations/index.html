@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru" id="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>if (location.pathname.endsWith('/index.html')) history.replaceState(history.state, '', location.pathname.slice(0, -10) + location.search + location.hash);</script>
+  <meta name="theme-color" content="#f7f8fa">
+  <meta name="color-scheme" content="light">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="description" content="ComfyUI workflow с тремя отдельными ветвями генерации.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Один исходник — три ветви вариаций · ComfyUI">
+  <meta property="og:description" content="ComfyUI workflow с тремя отдельными ветвями генерации.">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Один исходник — три ветви вариаций · ComfyUI">
+  <meta name="twitter:description" content="ComfyUI workflow с тремя отдельными ветвями генерации.">
+  <title>Один исходник — три ветви вариаций · ComfyUI</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css?v=8c82d16540d0">
+  <script src="/assets/i18n.js?v=8c82d16540d0" defer></script>
+  <script src="/assets/site.js?v=8c82d16540d0" defer></script>
+  <script src="/assets/youtube.js?v=8c82d16540d0" defer></script>
+  
+<link rel="canonical" href="https://cv-designer.me/ru/projects/comfyui-three-variations/"><meta property="og:url" content="https://cv-designer.me/ru/projects/comfyui-three-variations/"><link rel="alternate" hreflang="en" href="https://cv-designer.me/projects/comfyui-three-variations/"><link rel="alternate" hreflang="uk" href="https://cv-designer.me/uk/projects/comfyui-three-variations/"><link rel="alternate" hreflang="ru" href="https://cv-designer.me/ru/projects/comfyui-three-variations/"><link rel="alternate" hreflang="x-default" href="https://cv-designer.me/projects/comfyui-three-variations/"><meta property="og:locale" content="ru_RU">
+</head>
+<body class="page page--comfyui">
+  <a class="skip-link" href="#main">К содержанию</a>
+  
+  <header class="site-header">
+    <a class="brand" href="/ru/">ПОРТФОЛИО<span class="brand-dot" aria-hidden="true"></span></a>
+    <nav class="main-nav" aria-label="Основные направления"><a href="/ru/etsy/">Etsy</a><a href="/ru/amazon/">Amazon A+</a><a href="/ru/photoshop/">Photoshop Scripts</a><a href="/ru/comfyui/" aria-current="page">ComfyUI</a></nav>
+    <div class="header-tools"><nav class="language-switch" aria-label="Язык сайта"><a href="/projects/comfyui-three-variations/" data-language="en" lang="en" hreflang="en" aria-label="English">EN</a><a href="/uk/projects/comfyui-three-variations/" data-language="uk" lang="uk" hreflang="uk" aria-label="Українська">UK</a><a href="/ru/projects/comfyui-three-variations/" data-language="ru" lang="ru" hreflang="ru" aria-label="Русский" aria-current="true">RU</a></nav></div>
+  </header>
+  <main id="main"><article class="process-case wrap">
+  <a class="back-link" href="/ru/comfyui/" data-case-back>← Все проекты ComfyUI</a>
+  <header class="case-title"><p class="eyebrow">ComfyUI <span>·</span> Разработка ComfyUI workflow</p><h1>Один исходник — три ветви вариаций</h1><p>ComfyUI workflow с тремя отдельными ветвями генерации.</p></header>
+  
+  <section class="process-detail-lead "><aside><h2>Задача</h2><p>Организовать несколько вариантов обработки одного исходного изображения в общем графе.</p><p class="case-fact-role">Разработка ComfyUI workflow</p></aside><div class="process-detail-video"><div class="process-diagram process-diagram--comfyui"><div class="diagram-heading"><span class="diagram-app">C</span><span>COMFYUI WORKFLOW</span></div><ol><li><span class="diagram-number">01</span><span>Исходное изображение</span></li><li><span class="diagram-number">02</span><span>Масштабирование и VAE Encode</span></li><li><span class="diagram-number">03</span><span>Три ветви: текст и KSampler</span></li><li><span class="diagram-number">04</span><span>VAEDecode и три SaveImage</span></li></ol><p class="diagram-caption">Схема по исходному коду · не видеозапись</p></div></div></section>
+  <section class="case-story " id="case-story"><div><p class="eyebrow">ПРОЕКТ</p><h2>Решение и результат</h2></div><div><section><h3>Что было сделано</h3><p>Собрал загрузку и масштабирование исходника, общую подготовку моделей и VAE, затем три ветви с текстовой подготовкой через IFGeminiNode, KSampler, VAEDecode и SaveImage.</p></section><section><h3>Результат</h3><p>В графе есть три отдельные точки сохранения и собственные текстовые инструкции для каждой ветви. Примеры выходов и запись выполнения для этого кейса пока не приложены.</p></section><p class="tools-line">ComfyUI · IFGeminiNode · KSampler · VAE</p></div></section>
+  
+  <nav class="case-end" aria-label="Навигация по кейсу"><a class="text-link" href="/ru/comfyui/" data-case-back>Все работы <span aria-hidden="true">↗</span></a><a class="case-next" href="/ru/projects/comfyui-vector-preparation/?from=comfyui" data-case-next><div class="image-missing" role="img" aria-label="Подготовка изображения к векторизации">Изображение не предоставлено</div><span><small>Следующий проект</small><strong>Подготовка изображения к векторизации</strong></span><span aria-hidden="true">↗</span></a></nav>
+</article></main>
+
+  <footer class="site-footer" id="contact">
+    <a class="footer-brand" href="/ru/">ПОРТФОЛИО</a>
+    <span>Дизайн для товаров и интерьеров · Автоматизация визуальных процессов</span>
+    
+    <a class="to-top" href="#top" data-to-top>Наверх ↑</a>
+  </footer>
+</body>
+</html>
