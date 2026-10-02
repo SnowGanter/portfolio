@@ -1,6 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=eac82fd2ba58';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=eac82fd2ba58';
-import {loadPackagingSource} from './packaging-source.js?v=eac82fd2ba58';
+import * as T from './vendor/packaging-three.js?v=9c13f876ac32';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=9c13f876ac32';
+import {loadPackagingSource} from './packaging-source.js?v=9c13f876ac32';
 const root=document.querySelector('[data-packaging-viewer]');
 if(root) start(root);
 async function start(root) {
@@ -34,7 +34,11 @@ async function start(root) {
     else if(materials)change(index);
     else pendingInitial=index;
   });
-  for(const link of document.querySelectorAll('[data-pillow-design]'))link.addEventListener('click',()=>{
+  for(const link of document.querySelectorAll('[data-pillow-design]'))link.addEventListener('click',event=>{
+    if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    event.preventDefault();
+    document.getElementById('pillow-3d')?.scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'start'});
+    if(location.hash!=='#pillow-3d')history.replaceState(history.state,'',location.pathname+location.search+'#pillow-3d');
     const index=config.variants.findIndex(v=>v.id===link.dataset.pillowDesign);
     if(index>=0){if(lost)fallbackChange(index);else if(materials)change(index);else pendingInitial=index;}
   });
