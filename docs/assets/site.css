@@ -1,4 +1,4 @@
-@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=fac93285cdd9') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=d529bd8f3573') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
 :root {
   color-scheme: light;
   --paper: #f7f8fa;
@@ -198,6 +198,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 .project-grid--home { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .work-card { display: block; min-width: 0; }
 .card-media { position: relative; overflow: hidden; border-radius: 8px; background: #edf0f3; }
+.card-media>.am-generated-card { display: block; }
 .work-image { width: 100%; height: auto; aspect-ratio: 1.34; object-fit: cover; transition: transform .32s cubic-bezier(.2,.65,.25,1); }
 .work-card[data-category="painting"] .work-image { object-fit: contain; }
 .work-card:focus-visible .work-image { transform: scale(1.015); }

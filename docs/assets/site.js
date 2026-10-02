@@ -217,7 +217,12 @@
     let image = document.querySelector("#lightbox-image");
     if (!dialog || !stage || !image) return;
 
-    const frames = Array.from(document.querySelectorAll("[data-lightbox-image]"));
+    const frameLinks = Array.from(document.querySelectorAll("[data-lightbox-image]"));
+    // Amazon repeats the same photograph in Brand Story, A+ and comparison.
+    // Keep every opener, but browse each source just once in the gallery.
+    const frames = document.querySelector('[data-amazon-page]')
+      ? frameLinks.filter((frame,index,list) => list.findIndex(item => item.dataset.lightboxImage === frame.dataset.lightboxImage) === index)
+      : frameLinks;
     const title = dialog.querySelector("#lightbox-title");
     const caption = dialog.querySelector("#lightbox-caption");
     const counter = dialog.querySelector("#lightbox-count");
@@ -373,13 +378,13 @@
 
     function open(frame, trigger = frame) {
       opener = trigger;
-      activeIndex = Math.max(0, frames.indexOf(frame));
+      activeIndex = Math.max(0, frames.findIndex(item => item.dataset.lightboxImage === frame.dataset.lightboxImage));
       if (!dialog.open) dialog.showModal();
       setFrame(activeIndex);
       closeButton.focus({ preventScroll: true });
     }
 
-    for (const frame of frames) {
+    for (const frame of frameLinks) {
       frame.addEventListener("click", (event) => {
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
@@ -389,7 +394,7 @@
     for (const trigger of document.querySelectorAll('[data-open-frame]')) {
       trigger.addEventListener('click', (event) => {
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        const frame = frames[Number(trigger.dataset.openFrame)];
+        const frame = frameLinks[Number(trigger.dataset.openFrame)];
         if (!frame) return;
         event.preventDefault();
         open(frame, trigger);

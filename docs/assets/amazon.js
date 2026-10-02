@@ -6,6 +6,7 @@
   const frames=[...root.querySelectorAll('[data-amazon-frame]')];
   const thumbs=[...root.querySelectorAll('[data-amazon-thumb]')];
   const choices=[...root.querySelectorAll('[data-amazon-design]')];
+  const lookChoices=[...root.querySelectorAll('[data-amazon-look]')];
   const image=root.querySelector('[data-amazon-image]');
   let active=0,request=0;
   function show(index) {
@@ -73,7 +74,7 @@
     carousel.querySelector('[data-carousel-prev]').addEventListener('click',()=>choose(current-1));
     carousel.querySelector('[data-carousel-next]').addEventListener('click',()=>choose(current+1));
     choose(0);
-    carouselStates.push({choose,designs:panels.map(panel=>panel.querySelector('[data-pillow-design]').dataset.pillowDesign)});
+    carouselStates.push({choose,designs:panels.map(panel=>panel.dataset.campaignLook||panel.querySelector('[data-pillow-design]')?.dataset.pillowDesign||'')});
   }
   function syncCarousel(id) {
     for(const state of carouselStates){const index=state.designs.indexOf(id);if(index>=0)state.choose(index);}
@@ -95,9 +96,31 @@
     if(typeof ResizeObserver==='function')new ResizeObserver(update).observe(track);
     update();
   }
-  if(choices.length)selected();else if(frames.length)show(0);
+  function selectedLook(id=new URL(location.href).searchParams.get('look')) {
+    const choice=lookChoices.find(link=>link.dataset.amazonLook===id)||lookChoices[0];
+    if(!choice)return;
+    const name=choice.querySelector('span').textContent;
+    root.querySelector('[data-amazon-design-name]').textContent=name;
+    root.querySelector('[data-amazon-selected]').textContent=name;
+    lookChoices.forEach(link=>link.setAttribute('aria-current',String(link===choice)));
+    const index=frames.findIndex(frame=>frame.dataset.design===choice.dataset.amazonLook);
+    if(index>=0)show(index);
+    syncCarousel(choice.dataset.amazonLook);
+    for(const link of document.querySelectorAll('[data-language]')) {
+      const target=new URL(link.href,location.href);
+      target.search=location.search;target.hash=location.hash;
+      link.href=target.pathname+target.search+target.hash;
+    }
+  }
+  for(const choice of lookChoices)choice.addEventListener('click',event=>{
+    if(event.button||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    event.preventDefault();const next=new URL(location.href);
+    next.searchParams.set('look',choice.dataset.amazonLook);
+    history.pushState(null,'',next);selectedLook(choice.dataset.amazonLook);
+  });
+  if(lookChoices.length)selectedLook();else if(choices.length)selected();else if(frames.length)show(0);
   syncCarousel(new URL(location.href).searchParams.get('design'));
-  window.addEventListener('popstate',()=>{selected();syncCarousel(new URL(location.href).searchParams.get('design'));});
+  window.addEventListener('popstate',()=>{if(lookChoices.length)selectedLook();else{selected();syncCarousel(new URL(location.href).searchParams.get('design'));}});
   root.addEventListener('portfolio:designchange',event=>{selected(event.detail.id);syncCarousel(event.detail.id);});
   // The 3D module owns design/history changes. Without it the links work natively.
   const sections=[...root.querySelectorAll('[data-amazon-search-section]')];
