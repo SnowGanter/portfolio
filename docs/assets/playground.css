@@ -16,6 +16,36 @@
 .play-card-copy p { max-width: 500px; margin: 8px 0 12px; color: var(--muted); font-size: 14px; }
 .play-card-copy .play-card-cta { color: var(--accent); font-size: 13px; }
 .play-suggestions { padding: 28px 0 0; border-top: 1px solid var(--line); margin-top: 56px; color: var(--muted); font-size: 14px; }
+.surface-heading { margin: 54px 0 24px; scroll-margin-top: 120px; }
+.surface-heading h2 { font-size: clamp(26px,3vw,42px); letter-spacing: -.04em; margin: 4px 0; }
+.model-credit, .aplus-disclosure { max-width: 820px; font-size: 12px; line-height: 1.7; color: var(--muted); }
+.model-credit a { color: var(--accent); }
+.pillow-aplus { padding-top: 24px; }
+.pillow-case-title { padding: 20px 0 38px; }
+.pillow-case-title h1 { font-size: clamp(40px,5vw,68px); letter-spacing: -.06em; margin: 0; }
+.pillow-case-title > p:last-child { color: var(--muted); }
+.aplus-preview { max-width: 1200px; margin: auto; background: #f4f0e8; }
+.aplus-hero { display: grid; grid-template-columns: 1fr 1fr; align-items: center; overflow: hidden; padding: 46px 38px 38px; }
+.aplus-brand { display: block; margin-bottom: 50px; font-size: 12px; letter-spacing: .18em; }
+.aplus-preview h2 { font-size: clamp(32px,4.3vw,58px); font-weight: 500; letter-spacing: -.055em; line-height: 1.04; white-space: pre-line; margin: 14px 0 24px; }
+.aplus-preview p { max-width: 390px; font-size: 14px; line-height: 1.8; color: #596052; }
+.pillow-hero-object { min-width: 0; }
+.pillow-hero-object img { display: block; width: 120%; height: auto; max-width: none; margin-left: -7%; mix-blend-mode: multiply; }
+.aplus-patterns { padding: 46px 38px; background: #e9e7dc; }
+.aplus-trio { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.aplus-trio a { background: #f9f7f2; border-radius: 4px; overflow: hidden; }
+.aplus-trio img { display: block; width: 100%; height: auto; mix-blend-mode: multiply; }
+.aplus-trio span { display: block; padding: 0 16px 18px; color: #4b574d; font-size: 13px; }
+.aplus-detail { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 64px; padding: 56px 38px; }
+.fabric-swatch { min-height: 360px; border-radius: 5px; background-color: #d6d3c7; background-size: 160%; box-shadow: inset 0 0 80px #705c3320; }
+@media (max-width:720px) {
+  .aplus-hero, .aplus-detail { grid-template-columns: 1fr; padding: 28px 20px; gap: 22px; }
+  .aplus-brand { margin-bottom: 28px; }
+  .aplus-patterns { padding: 28px 20px; }
+  .aplus-trio { gap: 8px; }
+  .aplus-trio span { font-size: 10px; padding: 0 8px 12px; }
+  .fabric-swatch { min-height: 280px; }
+}
 .pack-case { padding-top: 30px; }
 .play-back { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); font-size: 13px; }
 .pack-case-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-block: 12px 26px; }
@@ -42,7 +72,7 @@
 .skin-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .skin-choice { display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); text-align: left; transition: border-color .2s, background .2s; }
 .skin-choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
-.skin-choice img { flex: 0 0 auto; width: 48px; height: 74px; object-fit: cover; border-radius: 3px; }
+.skin-choice img { flex: 0 0 auto; width: 72px; height: 52px; object-fit: contain; border-radius: 3px; background: #f2f3f5; }
 .skin-choice span { display: grid; gap: 5px; }
 .skin-choice b { font-size: 14px; font-weight: 600; }
 .skin-choice small { color: var(--muted); font-size: 10px; }
@@ -114,7 +144,8 @@
   .skin-panel h2 { font-size: 17px; margin-bottom: 10px; }
   .skin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
   .skin-choice { display: grid; gap: 8px; padding: 10px; }
-  .skin-choice img { width: 28px; height: 42px; }
+  .skin-grid:has(.skin-choice:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .skin-choice img { width: min(100%, 96px); height: 52px; }
   .skin-choice b { font-size: 11px; line-height: 1.4; }
   .skin-choice small { display: none; }
   .texture-details { margin-top: 7px; font-size: 10px; }

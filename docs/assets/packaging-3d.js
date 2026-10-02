@@ -1,5 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=41770e7f7122';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=41770e7f7122';
+import * as T from './vendor/packaging-three.js?v=eac82fd2ba58';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=eac82fd2ba58';
+import {loadPackagingSource} from './packaging-source.js?v=eac82fd2ba58';
 const root=document.querySelector('[data-packaging-viewer]');
 if(root) start(root);
 async function start(root) {
@@ -8,16 +9,34 @@ async function start(root) {
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const controls=[...root.querySelectorAll('[data-variant]')];
   let renderer,scene,camera,model,materials,raf=0,last=0,visible=true,userPaused=false,lost=false,turnX=.08,turnY=-.38,zoom=1,drag=null,time=0;
+  [turnX,turnY]=config.view||[.08,-.38];
   const selected=()=>Math.max(0,config.variants.findIndex(v=>v.id===new URL(location.href).searchParams.get('design')));
-  let current=selected(),transition=null,queued=null,request=0;
+  let current=selected(),transition=null,queued=null,request=0,pendingInitial=null;
   const textureCache=new Map(),points=new Map();
   let pinch=0;
   const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+  function recordDesign(index){
+    const destination=new URL(location.href);destination.searchParams.set('design',config.variants[index].id);
+    if(destination.href!==location.href)history.pushState({design:config.variants[index].id},'',destination);
+    for(const link of document.querySelectorAll('[data-language]')){const target=new URL(link.href,location.href);target.search=destination.search;target.hash=destination.hash;link.href=target.pathname+target.search+target.hash;}
+  }
+  function fallbackChange(index,record=true){
+    current=index;root.querySelector('.pack-poster').src=config.variants[index].preview||config.variants[index].faces[4];
+    root.dataset.variant=config.variants[index].id;status.textContent=config.variants[index].name+' · '+config.strings.failed;
+    for(const button of controls)button.setAttribute('aria-pressed',String(Number(button.dataset.variant)===index));
+    if(record)recordDesign(index);
+  }
+  window.addEventListener('popstate',()=>change(selected(),false));
   root.querySelector('[data-pack-retry]').addEventListener('click',()=>location.reload());
   for(const button of controls)button.addEventListener('click',()=>{
     const index=Number(button.dataset.variant);
-    if(lost){root.querySelector('.pack-poster').src=config.variants[index].faces[4];root.dataset.variant=config.variants[index].id;status.textContent=config.variants[index].name+' · '+config.strings.failed;for(const other of controls)other.setAttribute('aria-pressed',String(other===button));}
+    if(lost)fallbackChange(index);
     else if(materials)change(index);
+    else pendingInitial=index;
+  });
+  for(const link of document.querySelectorAll('[data-pillow-design]'))link.addEventListener('click',()=>{
+    const index=config.variants.findIndex(v=>v.id===link.dataset.pillowDesign);
+    if(index>=0){if(lost)fallbackChange(index);else if(materials)change(index);else pendingInitial=index;}
   });
   async function textures(index) {
     if(!textureCache.has(index)) textureCache.set(index,Promise.all(config.variants[index].faces.map(src=>new Promise((resolve,reject)=>{
@@ -25,7 +44,7 @@ async function start(root) {
       const timer=setTimeout(()=>{settled=true;reject(new Error('Artwork load timeout'));},20000);
       new T.TextureLoader().load(src,t=>{
         if(settled){t.dispose();return;}settled=true;clearTimeout(timer);
-        t.colorSpace=T.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();resolve(t);
+        t.colorSpace=T.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();t.wrapS=T.RepeatWrapping;resolve(t);
       },undefined,error=>{if(settled)return;settled=true;clearTimeout(timer);reject(error);});
     }))).catch(error=>{textureCache.delete(index);throw error;}));
     return textureCache.get(index);
@@ -47,12 +66,8 @@ async function start(root) {
       root.dataset.transition=p.toFixed(3);
       if(p===1) {
         current=transition.index;
-        for(let i=0;i<materials.length;i++){materials[i].map=transition.maps[i];materials[i].userData.blend.value=0;materials[i].userData.next.value=transition.maps[i];materials[i].needsUpdate=true;}
-        if(transition.record){
-          const destination=new URL(location.href);destination.searchParams.set('design',config.variants[current].id);
-          if(destination.href!==location.href)history.pushState({design:config.variants[current].id},'',destination);
-          for(const link of document.querySelectorAll('[data-language]')){const target=new URL(link.href,location.href);target.search=destination.search;target.hash=destination.hash;link.href=target.pathname+target.search+target.hash;}
-        }
+        for(let i=0;i<materials.length;i++){materials[i].map=transition.maps[i];materials[i].userData.artMap.value=transition.maps[i];materials[i].userData.blend.value=0;materials[i].userData.next.value=transition.maps[i];materials[i].userData.original.value=config.variants[current].source?1:0;materials[i].needsUpdate=true;}
+        if(transition.record)recordDesign(current);
         transition=null;root.dataset.variant=config.variants[current].id;root.setAttribute('aria-busy','false');
         status.textContent=config.variants[current].name;
         for(const b of controls)b.setAttribute('aria-pressed',String(Number(b.dataset.variant)===current));
@@ -65,10 +80,11 @@ async function start(root) {
   function wake(){last=0;if(needsFrame()&&!raf)raf=requestAnimationFrame(tick);}
   function size(){
     if(!renderer)return;
-    const box=stage.getBoundingClientRect(),a=Math.max(1,box.width)/Math.max(1,box.height),distance=framePackaging(config.dimensions,a);
+    const box=stage.getBoundingClientRect(),a=Math.max(1,box.width)/Math.max(1,box.height),distance=framePackaging(model?.userData.dimensions||config.dimensions,a);
     renderer.setSize(box.width,box.height,false);camera.aspect=a;camera.position.set(0,.12,distance/zoom);camera.lookAt(0,.13,0);camera.updateProjectionMatrix();render();
   }
   async function change(index,record=true) {
+    if(lost){fallbackChange(index,record);return;}
     if(transition){queued={index,record};return;}
     if(index===current){
       // Returning to the current skin also cancels an older in-flight load.
@@ -77,7 +93,7 @@ async function start(root) {
     const token=++request;root.setAttribute('aria-busy','true');status.textContent=config.strings.loading;
     try {
       const maps=await textures(index);if(token!==request||lost)return;
-      for(let i=0;i<materials.length;i++)materials[i].userData.next.value=maps[i];
+      for(let i=0;i<materials.length;i++){materials[i].userData.next.value=maps[i];materials[i].userData.nextOriginal.value=config.variants[index].source?1:0;}
       transition={index,maps,elapsed:0,record};wake();
     }catch{if(token!==request||lost)return;root.setAttribute('aria-busy','false');status.textContent=config.strings.textureFailed;}
   }
@@ -85,36 +101,65 @@ async function start(root) {
     lost=true;cancelAnimationFrame(raf);raf=0;root.dataset.ready='false';canvas.hidden=true;status.textContent=config.strings.failed;
     root.querySelector('[data-pack-retry]').hidden=false;
     for(const button of root.querySelectorAll('.pack-toolbar button'))button.disabled=true;
+    fallbackChange(current,false);
+  }
+  function decorate(m,source=false,wood=false){
+    m.onBeforeCompile=shader=>{
+      shader.uniforms.uCoat=m.userData.blend;shader.uniforms.uNext=m.userData.next;
+      shader.uniforms.uArt=m.userData.artMap;
+      shader.uniforms.uOriginal=m.userData.original;shader.uniforms.uNextOriginal=m.userData.nextOriginal;
+      if(source){
+        shader.uniforms.uStock=m.userData.stock;
+        shader.vertexShader='attribute vec2 designUv;varying vec2 vDesignUv;\n'+shader.vertexShader;
+        shader.vertexShader=shader.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\nvDesignUv=designUv;');
+      }
+      shader.fragmentShader='uniform float uCoat;uniform sampler2D uNext;uniform sampler2D uArt;uniform float uOriginal;uniform float uNextOriginal;'+(source?'uniform sampler2D uStock;varying vec2 vDesignUv;':'')+'\n'+shader.fragmentShader;
+      shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#ifdef USE_MAP
+        vec2 artUv=${source?'vDesignUv':'vMapUv'};
+        vec4 oldCoat=texture2D(uArt,artUv);vec4 newCoat=texture2D(uNext,artUv);
+        ${source?'vec4 stockCoat=texture2D(uStock,vMapUv);oldCoat=mix(oldCoat,stockCoat,uOriginal);newCoat=mix(newCoat,stockCoat,uNextOriginal);':''}
+        ${wood?'oldCoat.rgb*=mix(vec3(1.),stockCoat.rgb,.22*(1.-uOriginal));newCoat.rgb*=mix(vec3(1.),stockCoat.rgb,.22*(1.-uNextOriginal));':''}
+        float edge=uCoat*1.3-.15;float coat=smoothstep(artUv.x*.72+(1.-artUv.y)*.28-.08,artUv.x*.72+(1.-artUv.y)*.28+.08,edge);
+        diffuseColor*=mix(oldCoat,newCoat,coat);
+        #endif`);
+    };m.customProgramCacheKey=()=> 'packaging-coat-3-'+source+'-'+wood;
   }
   try {
     renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'low-power'});
-    renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
+    renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<720?1.5:2));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.NeutralToneMapping;renderer.toneMappingExposure=1.0;
+    renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;
     scene=new T.Scene();camera=new T.PerspectiveCamera(32,1,.1,100);
-    scene.add(new T.HemisphereLight('#ffffff','#b5b8c4',1.5));
-    const key=new T.DirectionalLight('#ffffff',2.2);key.position.set(-3,4,6);scene.add(key);
-    const rim=new T.DirectionalLight('#e1e9ff',1.0);rim.position.set(4,2,-3);scene.add(rim);
+    scene.add(new T.HemisphereLight('#ffffff','#b5b8c4',.65));
+    const key=new T.DirectionalLight('#fff8ee',2.0);key.position.set(-3,5,6);scene.add(key);
+    key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=4;key.shadow.camera.bottom=-4;key.shadow.normalBias=.02;key.shadow.bias=-.0002;key.shadow.radius=3;
+    const rim=new T.DirectionalLight('#e1e9ff',.65);rim.position.set(4,2,-3);scene.add(rim);
+    if(config.environment){
+      const pmrem=new T.PMREMGenerator(renderer);pmrem.compileEquirectangularShader();
+      let lightingTimer,lightingExpired=false;
+      try{
+        const loaded=new T.HDRLoader().loadAsync(config.environment).then(hdr=>{if(lightingExpired){hdr.dispose();return null;}return hdr;});
+        const hdr=await Promise.race([loaded,new Promise((_,reject)=>{lightingTimer=setTimeout(()=>{lightingExpired=true;reject(new Error('Studio lighting timeout'));},6000);})]);
+        scene.environment=pmrem.fromEquirectangular(hdr).texture;scene.environmentIntensity=.65;hdr.dispose();root.dataset.lighting='studio-hdri';
+      }catch{root.dataset.lighting='studio-fallback';}finally{clearTimeout(lightingTimer);pmrem.dispose();}
+    }
     const maps=await textures(current);
     materials=maps.map(map=>{
-      const m=new T.MeshStandardMaterial({map,roughness:config.model==='pouch'?.52:.83,metalness:config.model==='pouch'?.08:.01});
-      m.userData.blend={value:0};m.userData.next={value:map};
-      m.onBeforeCompile=shader=>{
-        shader.uniforms.uCoat=m.userData.blend;shader.uniforms.uNext=m.userData.next;
-        shader.fragmentShader='uniform float uCoat;uniform sampler2D uNext;\n'+shader.fragmentShader;
-        shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#ifdef USE_MAP
-          vec4 oldCoat=texture2D(map,vMapUv);vec4 newCoat=texture2D(uNext,vMapUv);
-          float edge=uCoat*1.3-.15;float coat=smoothstep(vMapUv.x*.72+(1.-vMapUv.y)*.28-.08,vMapUv.x*.72+(1.-vMapUv.y)*.28+.08,edge);
-          diffuseColor*=mix(oldCoat,newCoat,coat);
-          #endif`);
-      };m.customProgramCacheKey=()=> 'packaging-coat-1';return m;
+      const m=new T.MeshPhysicalMaterial({map,roughness:config.model==='pouch'?.37:.72,metalness:0,clearcoat:config.model==='pouch'?.45:0,clearcoatRoughness:.38});
+      m.userData.blend={value:0};m.userData.next={value:map};m.userData.artMap={value:map};
+      m.userData.original={value:config.variants[current].source?1:0};m.userData.nextOriginal={value:config.variants[current].source?1:0};
+      decorate(m);return m;
     });
-    model=makePackagingModel(T,config,materials);scene.add(model);
+    model=config.source?await loadPackagingSource(T,config,materials,decorate):makePackagingModel(T,config,materials);scene.add(model);
+    const ground=new T.Mesh(new T.PlaneGeometry(30,30),new T.ShadowMaterial({opacity:.10,depthWrite:false}));
+    ground.rotation.x=-Math.PI/2;ground.position.y=-(model.userData.dimensions||config.dimensions)[1]*.5-.16;ground.receiveShadow=true;scene.add(ground);
+    root.dataset.modelSource=config.source?config.source.id:'original-geometry-v2';root.dataset.modelDimensions=(model.userData.dimensions||config.dimensions).map(n=>n.toFixed(3)).join(',');
     size();pose();render();canvas.hidden=false;root.dataset.ready='true';root.dataset.variant=config.variants[current].id;status.textContent=config.variants[current].name;
     for(const button of controls)button.setAttribute('aria-pressed',String(Number(button.dataset.variant)===current));wake();
-  }catch{fail();return;}
+    if(pendingInitial!==null)change(pendingInitial);
+  }catch(error){console.error('Packaging viewer unavailable:',error);fail();return;}
   new ResizeObserver(size).observe(stage);
   new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible&&!transition){cancelAnimationFrame(raf);raf=0;last=0;}else wake();},{threshold:.05}).observe(stage);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;last=0;}else wake();});
-  window.addEventListener('popstate',()=>change(selected(),false));
   reduced.addEventListener('change',()=>{pose();render();wake();});
   canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();fail();});
   canvas.addEventListener('webglcontextrestored',()=>location.reload());
@@ -134,7 +179,7 @@ async function start(root) {
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home',' '].includes(event.key))return;event.preventDefault();
     if(event.key==='Home')reset();else if(event.key===' ')togglePause();else{turnY+=(event.key==='ArrowLeft'?-.15:event.key==='ArrowRight'?.15:0);turnX=clamp(turnX+(event.key==='ArrowUp'?-.1:event.key==='ArrowDown'?.1:0),-1.1,1.1);pose();render();}
   });
-  function reset(){turnX=.08;turnY=-.38;zoom=1;time=0;pose();size();wake();}
+  function reset(){[turnX,turnY]=config.view||[.08,-.38];zoom=1;time=0;pose();size();wake();}
   function togglePause(){userPaused=!userPaused;const b=root.querySelector('[data-pack-pause]');b.setAttribute('aria-pressed',String(userPaused));b.textContent=userPaused?config.strings.play:config.strings.pause;pose();render();wake();}
   root.querySelector('[data-pack-reset]').addEventListener('click',reset);
   root.querySelector('[data-pack-pause]').addEventListener('click',togglePause);

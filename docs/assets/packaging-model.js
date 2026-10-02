@@ -2,19 +2,25 @@ export const faces = ['right', 'left', 'top', 'bottom', 'front', 'back', 'wrap']
 export function makePackagingModel(T, project, materials) {
   const group=new T.Group();
   const [w,h,d]=project.dimensions;
-  const plain=(color,roughness=.75)=>new T.MeshStandardMaterial({color,roughness,metalness:.03});
+  const plain=(color,roughness=.75)=>new T.MeshPhysicalMaterial({color,roughness,metalness:0});
   const add=(geometry,material,x=0,y=0,z=0)=>{
-    const mesh=new T.Mesh(geometry,material);mesh.position.set(x,y,z);group.add(mesh);return mesh;
+    const mesh=new T.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
   };
   if(project.model==='pouch') {
     // Two joined inflated sheets, not a sphere or a flat image plane.
     for(const side of [1,-1]) {
-      const positions=[],uvs=[],indices=[],nx=32,ny=36;
+      const positions=[],uvs=[],indices=[],nx=72,ny=88;
       for(let j=0;j<=ny;j++) for(let i=0;i<=nx;i++) {
         const u=i/nx,v=j/ny;
-        const edgeWidth=.91+.09*Math.sin(Math.PI*v);
-        const wrinkle=.025*Math.sin(u*50)*Math.pow(Math.abs(v-.5)*2,9);
-        positions.push((u-.5)*w*edgeWidth,(v-.5)*h,side*(Math.sin(Math.PI*u)*Math.sin(Math.PI*v)*d*.5+wrinkle));
+        const sx=2*u-1,edge=Math.pow(Math.abs(sx),5),end=Math.exp(-Math.min(v,1-v)*14);
+        const standing=project.id==='candy-pack',gusset=project.id==='crackers-pack';
+        const edgeWidth=(standing?.88+.12*v:.96+.035*Math.sin(Math.PI*v));
+        const wrinkle=.012*Math.sin(u*65+v*24)*(edge+end)+.018*Math.sin((u+side*v*.62)*72)*end+.008*Math.sin(v*39+u*14)*edge;
+        const inflated=Math.pow(Math.sin(Math.PI*u),.34)*Math.pow(Math.sin(Math.PI*v),standing?.3:.4)*d*.5;
+        const fold=gusset?.035*Math.exp(-Math.pow((Math.abs(sx)-.83)/.10,2)):0;
+        const seam=Math.min(v,1-v)<.045;
+        const z=seam?.007+.003*Math.sin(u*380):inflated+wrinkle-fold;
+        positions.push((u-.5)*w*edgeWidth,(v-.5)*h+.004*Math.sin(u*27)*end,side*z);
         uvs.push(side===1?u:1-u,v);
       }
       for(let j=0;j<ny;j++) for(let i=0;i<nx;i++) {
@@ -24,22 +30,36 @@ export function makePackagingModel(T, project, materials) {
       const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));geo.setIndex(indices);geo.computeVertexNormals();
       add(geo,materials[side===1?4:5]);
     }
-    for(const dir of [-1,1]) {
-      add(new T.BoxGeometry(w*.91,.10,.025),materials[dir===1?2:3],0,dir*(h*.5-.025),0);
-      const seam=plain('#d5d1ca');
-      for(let i=0;i<24;i++) add(new T.BoxGeometry(.012,.06,.027),seam,-w*.43+i*w*.86/23,dir*(h*.5-.025),0);
-    }
+    // Heat-welded crimping is built into the film, not a row of grey cubes.
+    const fin=add(new T.RoundedBoxGeometry(w*.035,h*.89,.025,2,.008),materials[5],0,0,-d*.48);fin.name='rear-fin-seal';
+    if(project.id==='candy-pack')for(const side of [-1,1])add(new T.RoundedBoxGeometry(w*.86,.018,.023,2,.007),materials[side>0?4:5],0,h*.35,side*d*.28);
   } else if(project.model==='tube') {
-    add(new T.CylinderGeometry(w*.5,w*.5,h,64,1,false),[materials[6],materials[2],materials[3]]);
-    add(new T.CylinderGeometry(w*.51,w*.51,.13,64),plain('#d8d5ce',.4),0,h*.5+.025);
-    add(new T.CylinderGeometry(w*.51,w*.51,.045,64),plain('#d8d5ce',.4),0,-h*.5);
+    const tube=new T.CylinderGeometry(w*.5,w*.5,h-.08,128,6,false),uv=tube.attributes.uv;
+    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)+.25);
+    add(tube,[materials[6],materials[2],materials[3]]);
+    const rim=new T.MeshPhysicalMaterial({color:'#c5c4bb',metalness:.83,roughness:.3});
+    for(const dir of [-1,1])add(new T.LatheGeometry([[w*.48,-.025],[w*.51,-.015],[w*.52,0],[w*.51,.025],[w*.48,.028]].map(p=>new T.Vector2(...p)),128),rim,0,dir*h*.5,0);
+    add(new T.CylinderGeometry(w*.48,w*.48,.022,128),materials[2],0,h*.5+.01);
   } else if(project.model==='shoebox') {
-    add(new T.BoxGeometry(w,h,d),materials,0,-.07,0);
-    add(new T.BoxGeometry(w+.075,.2,d+.075),materials,0,h*.5+.01,0);
-    add(new T.BoxGeometry(w+.08,.012,d+.08),plain('#3b3832'),0,h*.5-.096,0);
-    add(new T.CircleGeometry(.095,32),plain('#353431'),0,-.12,d*.5+.003);
+    const stock=plain('#cdbb9e'),bodyH=h-.22,t=.035;
+    const rounded=(a,b,c)=>new T.RoundedBoxGeometry(a,b,c,3,Math.min(.015,a/5,b/5,c/5));
+    add(rounded(w,t,d),materials[3],0,-h*.5,0);
+    for(const side of [-1,1])add(rounded(t,bodyH,d),materials[side>0?0:1],side*w*.5,-.11,0);
+    add(rounded(w,bodyH,t),materials[5],0,-.11,-d*.5);
+    const shape=new T.Shape(),top=bodyH*.5;
+    shape.moveTo(-w*.5,-top);shape.lineTo(w*.5,-top);shape.lineTo(w*.5,top);shape.lineTo(.16,top);shape.absarc(0,top,.16,0,-Math.PI,true);shape.lineTo(-w*.5,top);shape.closePath();
+    const geo=new T.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelThickness:.002,bevelSize:.002,bevelSegments:2,curveSegments:32});
+    const p=geo.attributes.position,uv=geo.attributes.uv;for(let i=0;i<p.count;i++)uv.setXY(i,(p.getX(i)+w*.5)/w,(p.getY(i)+top)/bodyH);
+    add(geo,[materials[4],stock],0,-.11,d*.5-t*.5);
+    add(rounded(w-.06,bodyH,.006),stock,0,-.11,-d*.5+.024);
+    const lid=add(rounded(w+.1,.055,d+.1),[stock,stock,materials[2],stock,stock,stock],0,h*.5+.04,0);lid.name='separate-lid';
+    const edgeGeo=(a,b,c)=>{const g=rounded(a,b,c),uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setY(i,uv.getY(i)*.045);return g;};
+    for(const side of [-1,1]){
+      add(edgeGeo(w+.1,.18,t),materials[2],0,h*.5-.073,side*(d*.5+.033));
+      add(edgeGeo(t,.18,d+.06),materials[2],side*(w*.5+.033),h*.5-.073,0);
+    }
   } else {
-    add(new T.BoxGeometry(w,h,d),materials);
+    add(new T.RoundedBoxGeometry(w,h,d,3,.02),materials);
     if(project.model==='carton') {
       const shape=new T.Shape();shape.moveTo(-w*.5,0);shape.lineTo(0,.48);shape.lineTo(w*.5,0);shape.closePath();
       const geo=new T.ExtrudeGeometry(shape,{depth:d,bevelEnabled:false});
@@ -51,8 +71,11 @@ export function makePackagingModel(T, project, materials) {
       const cap=add(new T.CylinderGeometry(.17,.17,.10,40),plain('#f4f1e8',.35),w*.23,h*.5+.24,d*.18);
       cap.rotation.z=-Math.atan(.48/(w*.5));
     } else {
-      add(new T.BoxGeometry(w,.013,.23),plain('#c8ba9c'),0,h*.5+.009,0);
-      add(new T.BoxGeometry(.012,.23,.24),plain('#c8ba9c'),w*.5+.007,h*.5-.105,0);
+      const tape=new T.MeshPhysicalMaterial({color:'#be9859',roughness:.47,transparent:true,opacity:.45,depthWrite:false});
+      for(const side of [-1,1])add(new T.RoundedBoxGeometry(w*.49,.012,d*.985,2,.004),materials[2],side*w*.25,h*.5+.008,0);
+      add(new T.BoxGeometry(.006,.014,d*.99),plain('#736d62'),0,h*.5+.01,0);
+      add(new T.BoxGeometry(.23,.004,d*.999),tape,0,h*.5+.018,0);
+      for(const side of [-1,1])add(new T.BoxGeometry(.23,.32,.005),tape,0,h*.5-.14,side*(d*.5+.008));
     }
   }
   return group;
@@ -60,6 +83,6 @@ export function makePackagingModel(T, project, materials) {
 export function framePackaging(dimensions, aspect) {
   // Stable bounding sphere fits every rotation on portrait and landscape screens.
   const [w,h,d]=dimensions;
-  const radius=Math.hypot(w,h+.65,d)*.5;
-  return radius*3.8/Math.min(1,Math.max(.3,aspect));
+  const fit=Math.max(h*.5+.12,(Math.hypot(w,d)*.5+.1)/Math.max(.3,aspect));
+  return fit*1.28/Math.tan(16*Math.PI/180);
 }
