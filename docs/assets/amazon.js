@@ -19,7 +19,7 @@
     const token=++request,loaded=new Image();
     gallery.setAttribute('aria-busy','true');
     const error=gallery.querySelector('.am-image-error');error.hidden=true;
-    loaded.onload=()=>{if(token!==request)return;image.src=loaded.src;image.hidden=false;gallery.setAttribute('aria-busy','false');};
+    loaded.onload=()=>{if(token!==request)return;image.src=loaded.src;image.hidden=false;gallery.setAttribute('aria-busy','false');const sticky=root.querySelector('[data-amazon-sticky-image]');if(sticky)sticky.src=loaded.src;};
     loaded.onerror=()=>{if(token!==request)return;image.hidden=true;error.hidden=false;gallery.setAttribute('aria-busy','false');};
     loaded.src=frame.dataset.preview;
   }
@@ -45,9 +45,60 @@
     const index=frames.findIndex(frame=>frame.dataset.design===choice.dataset.amazonDesign);
     if(index>=0)show(index);
   }
+  // Progressive enhancement: without JS, all carousel panels and detail copy
+  // are available via <noscript>, the brand rail can scroll, and FAQ uses
+  // native <details>. The initial JS frame never collapses three tall panels.
+  const carouselStates=[];
+  for(const carousel of root.querySelectorAll('[data-amazon-carousel]')) {
+    const tabs=[...carousel.querySelectorAll('[data-carousel-tab]')];
+    const panels=[...carousel.querySelectorAll('[data-carousel-panel]')];
+    const tabList=carousel.querySelector('[data-carousel-tabs]');
+    tabList.hidden=false;tabList.setAttribute('role','tablist');
+    carousel.querySelector('[data-carousel-controls]').hidden=false;
+    let current=0;
+    function choose(index,focus=false) {
+      current=(index+tabs.length)%tabs.length;
+      tabs.forEach((tab,i)=>{tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(i===current));tab.tabIndex=i===current?0:-1;});
+      panels.forEach((panel,i)=>{panel.hidden=i!==current;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',tabs[i].id);});
+      carousel.querySelector('[data-carousel-status]').textContent=`${current+1} / ${tabs.length}`;
+      if(focus)tabs[current].focus();
+    }
+    tabs.forEach((tab,i)=>{
+      tab.addEventListener('click',()=>choose(i));
+      tab.addEventListener('keydown',event=>{
+        if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+        event.preventDefault();choose(event.key==='Home'?0:event.key==='End'?tabs.length-1:current+(event.key==='ArrowLeft'?-1:1),true);
+      });
+    });
+    carousel.querySelector('[data-carousel-prev]').addEventListener('click',()=>choose(current-1));
+    carousel.querySelector('[data-carousel-next]').addEventListener('click',()=>choose(current+1));
+    choose(0);
+    carouselStates.push({choose,designs:panels.map(panel=>panel.querySelector('[data-pillow-design]').dataset.pillowDesign)});
+  }
+  function syncCarousel(id) {
+    for(const state of carouselStates){const index=state.designs.indexOf(id);if(index>=0)state.choose(index);}
+  }
+  for(const block of root.querySelectorAll('[data-amazon-hotspots]')) {
+    const buttons=[...block.querySelectorAll('[data-hotspot]')],copy=[...block.querySelectorAll('[data-hotspot-copy]')];
+    function open(index){buttons.forEach((button,i)=>button.setAttribute('aria-expanded',String(i===index)));copy.forEach((article,i)=>article.hidden=i!==index);}
+    buttons.forEach((button,i)=>{button.hidden=false;button.addEventListener('click',()=>open(i));});
+    open(0);
+  }
+  for(const rail of root.querySelectorAll('[data-amazon-rail]')) {
+    const track=rail.querySelector('[data-rail-track]'),prev=rail.querySelector('[data-rail-prev]'),next=rail.querySelector('[data-rail-next]');
+    prev.hidden=false;next.hidden=false;
+    const update=()=>{prev.disabled=track.scrollLeft<=1;next.disabled=track.scrollLeft+track.clientWidth>=track.scrollWidth-2;};
+    const move=direction=>track.scrollBy({left:direction*Math.min(track.clientWidth,298),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    prev.addEventListener('click',()=>move(-1));next.addEventListener('click',()=>move(1));
+    track.addEventListener('scroll',update,{passive:true});
+    track.addEventListener('keydown',event=>{if(event.target!==track||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();move(event.key==='ArrowLeft'?-1:1);});
+    if(typeof ResizeObserver==='function')new ResizeObserver(update).observe(track);
+    update();
+  }
   if(choices.length)selected();else if(frames.length)show(0);
-  window.addEventListener('popstate',()=>selected());
-  root.addEventListener('portfolio:designchange',event=>selected(event.detail.id));
+  syncCarousel(new URL(location.href).searchParams.get('design'));
+  window.addEventListener('popstate',()=>{selected();syncCarousel(new URL(location.href).searchParams.get('design'));});
+  root.addEventListener('portfolio:designchange',event=>{selected(event.detail.id);syncCarousel(event.detail.id);});
   // The 3D module owns design/history changes. Without it the links work natively.
   const sections=[...root.querySelectorAll('[data-amazon-search-section]')];
   const result=root.querySelector('[data-amazon-results]');
@@ -60,7 +111,18 @@
     for(const section of matches){const link=document.createElement('a');link.href='#'+section.id;link.textContent=section.querySelector('h2').textContent;result.append(link);}
   });
   document.addEventListener('keydown',event=>{if(event.key==='Escape')result.hidden=true;});
-  for(const link of root.querySelectorAll('.am-section-nav a'))link.addEventListener('click',()=>{
-    for(const item of root.querySelectorAll('.am-section-nav a'))item.removeAttribute('aria-current');link.setAttribute('aria-current','location');
-  });
+  const sectionLinks=[...root.querySelectorAll('.am-section-links a')];
+  let navFrame=0,previousSection='';
+  function updateNav() {
+    navFrame=0;
+    const current=sections.filter(section=>section.getBoundingClientRect().top<=135).at(-1);
+    for(const link of sectionLinks){link.removeAttribute('aria-current');if(current&&link.hash==='#'+current.id)link.setAttribute('aria-current','location');}
+    if(current&&current.id!==previousSection){
+      previousSection=current.id;
+      const link=sectionLinks.find(item=>item.hash==='#'+current.id),track=root.querySelector('.am-section-links');
+      if(link){const box=link.getBoundingClientRect(),rail=track.getBoundingClientRect();if(box.left<rail.left||box.right>rail.right)track.scrollBy({left:box.left-rail.left-12,behavior:'auto'});}
+    }
+  }
+  window.addEventListener('scroll',()=>{if(!navFrame)navFrame=requestAnimationFrame(updateNav);},{passive:true});
+  updateNav();
 })();

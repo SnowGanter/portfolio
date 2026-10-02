@@ -1,6 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=c42d696df8da';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=c42d696df8da';
-import {loadPackagingSource} from './packaging-source.js?v=c42d696df8da';
+import * as T from './vendor/packaging-three.js?v=720efe4dc0cc';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=720efe4dc0cc';
+import {loadPackagingSource} from './packaging-source.js?v=720efe4dc0cc';
 const root=document.querySelector('[data-packaging-viewer]');
 if(root) start(root);
 async function start(root) {
