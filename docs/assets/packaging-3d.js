@@ -1,6 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=7106129c7517';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=7106129c7517';
-import {loadPackagingSource} from './packaging-source.js?v=7106129c7517';
+import * as T from './vendor/packaging-three.js?v=46956360ac49';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=46956360ac49';
+import {loadPackagingSource} from './packaging-source.js?v=46956360ac49';
 const root=document.querySelector('[data-packaging-viewer]');
 if(root) start(root);
 async function start(root) {
@@ -20,11 +20,13 @@ async function start(root) {
     if(destination.href!==location.href)history.pushState({design:config.variants[index].id},'',destination);
     for(const link of document.querySelectorAll('[data-language]')){const target=new URL(link.href,location.href);target.search=destination.search;target.hash=destination.hash;link.href=target.pathname+target.search+target.hash;}
   }
+  function notifyDesign(index){root.dispatchEvent(new CustomEvent('portfolio:designchange',{bubbles:true,detail:{id:config.variants[index].id}}));}
   function fallbackChange(index,record=true){
     current=index;root.querySelector('.pack-poster').src=config.variants[index].preview||config.variants[index].faces[4];
     root.dataset.variant=config.variants[index].id;status.textContent=config.variants[index].name+' · '+config.strings.failed;
     for(const button of controls)button.setAttribute('aria-pressed',String(Number(button.dataset.variant)===index));
     if(record)recordDesign(index);
+    notifyDesign(index);
   }
   window.addEventListener('popstate',()=>change(selected(),false));
   root.querySelector('[data-pack-retry]').addEventListener('click',()=>location.reload());
@@ -33,12 +35,14 @@ async function start(root) {
     if(lost)fallbackChange(index);
     else change(index);
   });
-  for(const link of document.querySelectorAll('[data-pillow-design]'))link.addEventListener('click',event=>{
+  for(const link of document.querySelectorAll('[data-pillow-design], [data-amazon-design]'))link.addEventListener('click',event=>{
     if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
     event.preventDefault();
-    document.getElementById('pillow-3d')?.scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'start'});
-    if(location.hash!=='#pillow-3d')history.replaceState(history.state,'',location.pathname+location.search+'#pillow-3d');
-    const index=config.variants.findIndex(v=>v.id===link.dataset.pillowDesign);
+    if(link.dataset.pillowDesign){
+      document.getElementById('pillow-3d')?.scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'start'});
+      if(location.hash!=='#pillow-3d')history.replaceState(history.state,'',location.pathname+location.search+'#pillow-3d');
+    }
+    const index=config.variants.findIndex(v=>v.id===(link.dataset.pillowDesign||link.dataset.amazonDesign));
     if(index>=0)change(index);
   });
   async function textures(index) {
@@ -74,6 +78,7 @@ async function start(root) {
         transition=null;root.dataset.variant=config.variants[current].id;root.setAttribute('aria-busy','false');
         status.textContent=config.variants[current].name;
         for(const b of controls)b.setAttribute('aria-pressed',String(Number(b.dataset.variant)===current));
+        notifyDesign(current);
         if(queued!==null){const next=queued;queued=null;change(next.index,next.record);}
       }
     }
@@ -92,7 +97,7 @@ async function start(root) {
     if(transition){queued={index,record};return;}
     if(index===current){
       // Returning to the current skin also cancels an older in-flight load.
-      ++request;root.setAttribute('aria-busy','false');status.textContent=config.variants[current].name;return;
+      ++request;root.setAttribute('aria-busy','false');status.textContent=config.variants[current].name;notifyDesign(current);return;
     }
     const token=++request;root.setAttribute('aria-busy','true');status.textContent=config.strings.loading;
     try {
