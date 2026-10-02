@@ -115,7 +115,13 @@
   let navFrame=0,previousSection='';
   function updateNav() {
     navFrame=0;
-    const current=sections.filter(section=>section.getBoundingClientRect().top<=135).at(-1);
+    // Native anchor alignment includes both html scroll-padding and section
+    // scroll-margin. A fixed 135px threshold incorrectly marked the previous
+    // section after a completed anchor jump (the heading actually lands at 164px).
+    const padding=parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0;
+    const margin=sections.length?(parseFloat(getComputedStyle(sections[0]).scrollMarginTop)||0):0;
+    const boundary=Math.max(135,padding+margin+3);
+    const current=sections.filter(section=>section.getBoundingClientRect().top<=boundary).at(-1);
     for(const link of sectionLinks){link.removeAttribute('aria-current');if(current&&link.hash==='#'+current.id)link.setAttribute('aria-current','location');}
     if(current&&current.id!==previousSection){
       previousSection=current.id;
