@@ -97,7 +97,8 @@
 .am-aplus-three>a:hover h4 { color: #c45500; }
 .am-aplus-image-text { display: grid; grid-template-columns: 300px minmax(0,1fr); align-items: center; gap: 35px; }
 .am-pattern-detail { width: 300px; aspect-ratio: 1; background-size: 100%; background-position: center; }
-.am-comparison { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
+.am-comparison { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; font-size: 13px; }
+.am-comparison th, .am-comparison td { overflow-wrap: anywhere; }
 .am-comparison th, .am-comparison td { padding: 10px; border-bottom: 1px solid #ddd; }
 .am-comparison th:first-child { text-align: left; width: 23%; }
 .am-comparison thead img { width: 130px; height: 94px; margin: 0 auto 10px; object-fit: contain; }
