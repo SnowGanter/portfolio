@@ -1,6 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=9c13f876ac32';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=9c13f876ac32';
-import {loadPackagingSource} from './packaging-source.js?v=9c13f876ac32';
+import * as T from './vendor/packaging-three.js?v=7106129c7517';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=7106129c7517';
+import {loadPackagingSource} from './packaging-source.js?v=7106129c7517';
 const root=document.querySelector('[data-packaging-viewer]');
 if(root) start(root);
 async function start(root) {
@@ -31,8 +31,7 @@ async function start(root) {
   for(const button of controls)button.addEventListener('click',()=>{
     const index=Number(button.dataset.variant);
     if(lost)fallbackChange(index);
-    else if(materials)change(index);
-    else pendingInitial=index;
+    else change(index);
   });
   for(const link of document.querySelectorAll('[data-pillow-design]'))link.addEventListener('click',event=>{
     if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
@@ -40,7 +39,7 @@ async function start(root) {
     document.getElementById('pillow-3d')?.scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'start'});
     if(location.hash!=='#pillow-3d')history.replaceState(history.state,'',location.pathname+location.search+'#pillow-3d');
     const index=config.variants.findIndex(v=>v.id===link.dataset.pillowDesign);
-    if(index>=0){if(lost)fallbackChange(index);else if(materials)change(index);else pendingInitial=index;}
+    if(index>=0)change(index);
   });
   async function textures(index) {
     if(!textureCache.has(index)) textureCache.set(index,Promise.all(config.variants[index].faces.map(src=>new Promise((resolve,reject)=>{
@@ -53,7 +52,7 @@ async function start(root) {
     }))).catch(error=>{textureCache.delete(index);throw error;}));
     return textureCache.get(index);
   }
-  const needsFrame=()=>!lost&&!document.hidden&&(visible||transition);
+  const needsFrame=()=>!!model&&!lost&&!document.hidden&&(visible||transition);
   function render() {if(renderer&&!lost){renderer.render(scene,camera);if(model){root.dataset.pose=[model.rotation.x,model.rotation.y,model.position.y].map(n=>n.toFixed(4)).join(',');root.dataset.zoom=zoom.toFixed(3);root.dataset.time=time.toFixed(3);}}}
   function pose() {
     model.rotation.set(turnX,turnY+Math.sin(time*.38)*.07,0);
@@ -89,6 +88,7 @@ async function start(root) {
   }
   async function change(index,record=true) {
     if(lost){fallbackChange(index,record);return;}
+    if(!model){pendingInitial={index,record};return;}
     if(transition){queued={index,record};return;}
     if(index===current){
       // Returning to the current skin also cancels an older in-flight load.
@@ -105,7 +105,7 @@ async function start(root) {
     lost=true;cancelAnimationFrame(raf);raf=0;root.dataset.ready='false';canvas.hidden=true;status.textContent=config.strings.failed;
     root.querySelector('[data-pack-retry]').hidden=false;
     for(const button of root.querySelectorAll('.pack-toolbar button'))button.disabled=true;
-    fallbackChange(current,false);
+    fallbackChange(pendingInitial?.index??current,pendingInitial?.record??false);pendingInitial=null;
   }
   function decorate(m,source=false,wood=false){
     m.onBeforeCompile=shader=>{
@@ -159,7 +159,7 @@ async function start(root) {
     root.dataset.modelSource=config.source?config.source.id:'original-geometry-v2';root.dataset.modelDimensions=(model.userData.dimensions||config.dimensions).map(n=>n.toFixed(3)).join(',');
     size();pose();render();canvas.hidden=false;root.dataset.ready='true';root.dataset.variant=config.variants[current].id;status.textContent=config.variants[current].name;
     for(const button of controls)button.setAttribute('aria-pressed',String(Number(button.dataset.variant)===current));wake();
-    if(pendingInitial!==null)change(pendingInitial);
+    if(pendingInitial!==null){const initial=pendingInitial;pendingInitial=null;change(initial.index,initial.record);}
   }catch(error){console.error('Packaging viewer unavailable:',error);fail();return;}
   new ResizeObserver(size).observe(stage);
   new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible&&!transition){cancelAnimationFrame(raf);raf=0;last=0;}else wake();},{threshold:.05}).observe(stage);
