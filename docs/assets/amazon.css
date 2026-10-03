@@ -1,14 +1,8 @@
 /* Isolated Amazon product-detail presentation; no changes to other sections. */
-.amazon-detail { --sans: Arial, sans-serif; background: #fff; color: #0f1111; }
-.amazon-detail .site-header { display: flex; justify-content: space-between; min-height: 40px; padding: 0 20px; background: #fff; backdrop-filter: none; z-index: 60; }
-.amazon-detail .site-header .main-nav, .amazon-detail .header-contact { display: none; }
-.amazon-detail .brand { font-size: 11px; letter-spacing: .03em; }
-.amazon-detail .brand-dot { width: 5px; height: 5px; }
-.amazon-detail .language-switch { padding: 0; border: 0; }
-.amazon-detail .language-switch a { min-height: 34px; min-width: 33px; }
+.amazon-detail { background: #fff; }
 .amazon-detail .site-footer { margin-top: 0; width: 100%; padding: 25px; background: #232f3e; color: #ddd; border: 0; }
 .amazon-detail .site-footer a { color: white; }
-.amazon-context { font: 14px/1.5 Arial, sans-serif; background: white; }
+.amazon-context { --sans: Arial, sans-serif; font: 14px/1.5 Arial, sans-serif; color: #0f1111; background: white; }
 .amazon-context [hidden] { display: none!important; }
 .amazon-context .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .amazon-context :is(h1,h2,h3,h4,p) { letter-spacing: normal; }
@@ -39,7 +33,7 @@
 .am-breadcrumb { display: flex; flex-wrap: wrap; gap: 7px; padding: 18px 0 22px; font-size: 12px; color: #565959; }
 .am-breadcrumb a { color: #565959; }
 .am-product { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) 244px; gap: 26px; align-items: start; padding-bottom: 30px; }
-.am-gallery { display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 12px; position: sticky; top: 55px; }
+.am-gallery { display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 12px; position: sticky; top: calc(var(--header-height) + 15px); }
 .am-thumbnails { display: flex; flex-direction: column; gap: 9px; }
 .am-thumb { width: 42px; height: 52px; display: grid; place-items: center; overflow: hidden; border: 1px solid #888c8c; border-radius: 8px; background: #f8f8f8; }
 .am-thumb img { width: 100%; height: 100%; object-fit: contain; }
@@ -74,7 +68,7 @@
 .am-outline-button { margin-top: 9px; border: 1px solid #888c8c; background: white; }
 .am-buybox-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; }
 .am-buybox-meta b { font-weight: 400; }
-.am-section-nav { display: flex; align-items: center; gap: 28px; min-height: 51px; padding: 6px 14px; border-block: 1px solid #d5d9d9; background: #fff; position: sticky; top: 40px; z-index: 20; overflow-x: auto; scrollbar-width: none; }
+.am-section-nav { display: flex; align-items: center; gap: 28px; min-height: 51px; padding: 6px 14px; border-block: 1px solid #d5d9d9; background: #fff; position: sticky; top: var(--header-height); z-index: 20; overflow-x: auto; scrollbar-width: none; }
 .am-section-nav a { flex-shrink: 0; color: #0f1111; font-size: 13px; }
 .am-section-nav a[aria-current] { font-weight: 700; color: #216e86; }
 .am-section-links { display: flex; align-items: center; gap: 26px; min-width: 0; overflow-x: auto; scrollbar-width: none; align-self: stretch; }
@@ -83,7 +77,8 @@
 .am-section-product { display: flex; align-items: center; gap: 10px; width: 230px; flex-shrink: 0; margin-left: auto; }
 .am-section-product img { width: 40px; height: 40px; object-fit: contain; }
 .am-section-product span { font-size: 12px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.amazon-context [id] { scroll-margin-top: 108px; }
+/* Global scroll-padding accounts for the shared header; add only the product navigation here. */
+.amazon-context [id] { scroll-margin-top: 60px; }
 .am-description, .am-interactive, .am-information { padding: 25px 0; border-bottom: 1px solid #d5d9d9; }
 .am-description>h2, .am-interactive>h2, .am-information>h2 { margin: 0 0 22px; font-size: 20px; font-weight: 700; }
 .am-aplus { max-width: 970px; margin: auto; background: #fff; }
@@ -256,7 +251,6 @@
   .am-swatches a { width: 80px; }
 }
 @media(max-width:700px) {
-  .amazon-detail .site-header { padding-inline: 14px; }
   .am-preview-note { padding: 7px 14px; font-size: 10px; }
   .am-preview-note span { max-width: 170px; text-align: right; }
   .am-belt { flex-wrap: wrap; gap: 6px 12px; padding: 5px 14px 9px; }
