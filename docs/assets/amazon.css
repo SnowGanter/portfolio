@@ -375,6 +375,47 @@
 .am-campaign-theme .am-hotspot-image img { width: 100%; height: 100%; max-height: 490px; object-fit: cover; }
 .am-campaign-theme .am-comparison img { object-fit: cover; }
 .am-brand-card .am-generated-card img, .am-related-grid .am-generated-card img { object-fit: cover; }
+
+/* Narrative campaigns: photography tells the story; brand cards explain identity. */
+.am-palette-study { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 5px 0 28px; }
+.am-palette-study span { min-width: 0; font: 11px Arial,sans-serif; color: var(--campaign-ink); text-align: center; overflow-wrap: anywhere; }
+.am-palette-study i { display: block; height: 150px; margin-bottom: 12px; background: var(--swatch); border-radius: 60px 60px 3px 3px; }
+.am-type-study { padding: 30px 4px; min-height: 191px; font: 39px Georgia,serif; letter-spacing: .06em; color: var(--campaign-ink); border-bottom: 1px solid #d5d9d9; }
+.am-type-study span { display: block; margin-top: 24px; font-size: 25px; letter-spacing: .03em; }
+.am-campaign-theme[data-brand-type="sans"] .am-type-study { font-family: Arial,sans-serif; }
+.am-shape-study { display: flex; gap: 12px; align-items: center; justify-content: center; height: 192px; overflow: hidden; color: var(--campaign-ink); }
+.am-shape-study i { display: block; width: 62px; height: 125px; border: 2px solid currentColor; border-radius: 60px 60px 0 0; }
+.am-shape-study--sun i { width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 0 0 5px var(--campaign-bg),0 0 0 6px currentColor; }
+.am-shape-study--ellipse i { width: 55px; height: 125px; border-radius: 50%; transform: rotate(25deg); }
+.am-shape-study--orbit i { width: 75px; height: 75px; border-radius: 50%; margin-inline: -18px; }
+.am-shape-study--stride i { width: 35px; height: 120px; border-radius: 2px; transform: skew(-22deg); }
+.am-shape-study--aura i { width: 70px; height: 95px; border-radius: 40px 40px 22px 22px; }
+.am-related-projects { grid-template-columns: repeat(5,minmax(0,1fr)); gap: 16px; }
+.am-related-projects a { min-width: 0; }
+.am-related-projects h3 { font-size: 15px; overflow-wrap: anywhere; }
+.am-related-projects p { font-size: 13px; }
+.am-campaign-theme .am-premium-detail-grid .am-detail-art { aspect-ratio: 3/2; }
+.am-story-carousel .am-carousel-panel { grid-template-columns: 64% 36%; min-height: 0; }
+.am-story-carousel .am-scene-photo { display: block; }
+.am-story-carousel .am-carousel-art img { display: block; height: auto; max-height: none; aspect-ratio: 3/2; object-fit: contain; }
+.am-story-carousel .am-carousel-copy { padding: 34px; }
+.am-story-carousel .am-carousel-copy h4 { font-size: clamp(24px,2.3vw,34px); }
+.am-story-carousel .am-carousel-tabs { gap: 12px; }
+.am-design-breakdown .am-hotspot-image { aspect-ratio: 4/3; height: auto; }
+.am-design-breakdown .am-hotspot-image img { height: 100%; max-height: none; object-fit: contain; }
+.am-design-guides { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.am-design-guides path { fill: none; stroke: #007185; stroke-width: .3; stroke-dasharray: 1 1; }
+.am-breakdown-palette { display: flex; gap: 6px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #d5d9d9; }
+.am-breakdown-palette i { flex: 1; height: 18px; border-radius: 2px; }
+@media(max-width:700px) {
+  .am-related-projects { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .am-story-carousel .am-carousel-panel { grid-template-columns: 1fr; }
+  .am-story-carousel .am-carousel-copy { padding: 24px; }
+  .am-story-carousel .am-carousel-tabs { gap: 2px; align-items: stretch; }
+  .am-story-carousel .am-carousel-tabs button { flex: 1; min-width: 0; padding: 10px 5px; font-size: 12px; overflow-wrap: anywhere; }
+  .am-campaign-theme .am-story-carousel .am-carousel-art img { max-height: none; }
+  .am-campaign-theme .am-design-breakdown .am-hotspot-image img { max-height: none; }
+}
 @media(max-width:700px) {
   .am-campaign-theme>section { margin-bottom: 28px; }
   .am-campaign-theme>section>h3 { font-size: 23px; margin-bottom: 20px; }
