@@ -81,9 +81,20 @@
   }
   for(const block of root.querySelectorAll('[data-amazon-hotspots]')) {
     const buttons=[...block.querySelectorAll('[data-hotspot]')],copy=[...block.querySelectorAll('[data-hotspot-copy]')];
-    function open(index){buttons.forEach((button,i)=>button.setAttribute('aria-expanded',String(i===index)));copy.forEach((article,i)=>article.hidden=i!==index);}
+    const stableLayout=block.classList.contains('am-design-breakdown');
+    function open(index){
+      buttons.forEach((button,i)=>button.setAttribute('aria-expanded',String(i===index)));
+      copy.forEach((article,i)=>{
+        if(stableLayout){
+          article.classList.toggle('is-active',i===index);
+          article.setAttribute('aria-hidden',String(i!==index));
+          article.inert=i!==index;
+        }else article.hidden=i!==index;
+      });
+    }
     buttons.forEach((button,i)=>{button.hidden=false;button.addEventListener('click',()=>open(i));});
     open(0);
+    if(stableLayout)block.dataset.hotspotsReady='';
   }
   for(const rail of root.querySelectorAll('[data-amazon-rail]')) {
     const track=rail.querySelector('[data-rail-track]'),prev=rail.querySelector('[data-rail-prev]'),next=rail.querySelector('[data-rail-next]');
