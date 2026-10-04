@@ -1,6 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=e68da53096e6';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=e68da53096e6';
-import {loadPackagingSource} from './packaging-source.js?v=e68da53096e6';
+import * as T from './vendor/packaging-three.js?v=6cda2c95331f';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=6cda2c95331f';
+import {loadPackagingSource} from './packaging-source.js?v=6cda2c95331f';
 const root=document.querySelector('[data-packaging-viewer]');
 const printStudy=document.querySelector('[data-print-study]');
 if(printStudy){
