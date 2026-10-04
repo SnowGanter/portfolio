@@ -33,6 +33,8 @@
   }
 
   function setupFilters() {
+    // Etsy's shop controller combines categories with search, sorting and saved items.
+    if (document.querySelector('[data-etsy-catalog]')) return;
     const buttons = Array.from(document.querySelectorAll("[data-filter]"));
     const cards = Array.from(document.querySelectorAll(".project-grid [data-category]"));
     if (!buttons.length) return;
