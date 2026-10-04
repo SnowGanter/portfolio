@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "280 × 210 × 70 mm",
   "project": "candy-pack",
-  "variant": "bon"
+  "variant": "bon",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1254,
+    "height": 1254
+  },
+  "nativeFrontPixels": {
+    "width": 1254,
+    "height": 625
+  },
+  "nominalFrontDpi": 75.6,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "c81231b3b5deb75ff79d182f5d0abc3db35cc92b0ff25dfa8254dfce9ed84ad2"
 }

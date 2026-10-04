@@ -1,6 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=3dbf7e2dfbbf';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=3dbf7e2dfbbf';
-import {loadPackagingSource} from './packaging-source.js?v=3dbf7e2dfbbf';
+import * as T from './vendor/packaging-three.js?v=b557ee0f9f7a';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=b557ee0f9f7a';
+import {loadPackagingSource} from './packaging-source.js?v=b557ee0f9f7a';
 const root=document.querySelector('[data-packaging-viewer]');
 const printStudy=document.querySelector('[data-print-study]');
 if(printStudy){
@@ -65,14 +65,21 @@ async function start(root) {
     if(index>=0)change(index);
   });
   async function textures(index) {
-    if(!textureCache.has(index)) textureCache.set(index,Promise.all(config.variants[index].faces.map(src=>new Promise((resolve,reject)=>{
+    if(!textureCache.has(index)) {
+      const unique=new Map();
+      const maps=config.variants[index].faces.map(src=>{
+        if(!unique.has(src))unique.set(src,new Promise((resolve,reject)=>{
       let settled=false;
       const timer=setTimeout(()=>{settled=true;reject(new Error('Artwork load timeout'));},20000);
       new T.TextureLoader().load(src,t=>{
         if(settled){t.dispose();return;}settled=true;clearTimeout(timer);
         t.colorSpace=T.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();t.wrapS=T.RepeatWrapping;resolve(t);
       },undefined,error=>{if(settled)return;settled=true;clearTimeout(timer);reject(error);});
-    }))).catch(error=>{textureCache.delete(index);throw error;}));
+        }));
+        return unique.get(src);
+      });
+      textureCache.set(index,Promise.all(maps).catch(error=>{textureCache.delete(index);throw error;}));
+    }
     return textureCache.get(index);
   }
   const needsFrame=()=>!!model&&!lost&&!document.hidden&&(visible||transition);

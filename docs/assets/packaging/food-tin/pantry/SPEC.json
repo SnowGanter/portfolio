@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "Ø 77 × 75 mm",
   "project": "food-tin",
-  "variant": "pantry"
+  "variant": "pantry",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 2135,
+    "height": 736
+  },
+  "nativeFrontPixels": {
+    "width": 1068,
+    "height": 736
+  },
+  "nominalFrontDpi": 203.2,
+  "seamStrategy": "single-continuous-wrap-with-common-quiet-join",
+  "sourceSha256": "9195b5b1aa4fbf5356acf566d1e5cd4c42cc6331fe0cb16b02b9606f6370cc55"
 }

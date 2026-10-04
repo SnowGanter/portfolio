@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "Ø 90 × 162 mm",
   "project": "dragee-tube",
-  "variant": "garden"
+  "variant": "garden",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1774,
+    "height": 887
+  },
+  "nativeFrontPixels": {
+    "width": 887,
+    "height": 887
+  },
+  "nominalFrontDpi": 143.5,
+  "seamStrategy": "single-continuous-wrap-with-common-quiet-join",
+  "sourceSha256": "e11f648582bd75f4dd707bca313e94802b315e403fa4df9407529fd20a790f38"
 }

@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "280 × 280 × 230 mm",
   "project": "appliance-box",
-  "variant": "living"
+  "variant": "living",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1774,
+    "height": 887
+  },
+  "nativeFrontPixels": {
+    "width": 885,
+    "height": 887
+  },
+  "nominalFrontDpi": 80.3,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "d2f37d3f4f272db69321fb8c0306de152d7284ca93f51c57118bfb472c7298f9"
 }

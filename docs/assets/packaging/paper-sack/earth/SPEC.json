@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "463 × 700 × 180 mm",
   "project": "paper-sack",
-  "variant": "earth"
+  "variant": "earth",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1254,
+    "height": 1254
+  },
+  "nativeFrontPixels": {
+    "width": 625,
+    "height": 1254
+  },
+  "nominalFrontDpi": 34.3,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "cdeb46ff34a0157500bb54ffa35ffa16f239ed80f3b4050dd9da7202281428fa"
 }

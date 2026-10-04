@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "280 × 210 × 70 mm",
   "project": "candy-pack",
-  "variant": "play"
+  "variant": "play",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1254,
+    "height": 1254
+  },
+  "nativeFrontPixels": {
+    "width": 1254,
+    "height": 625
+  },
+  "nominalFrontDpi": 75.6,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "7be896e2e4c117bcbcead8f5deb164d659eb87f5dcef2b8b0e4babfae359a0a7"
 }

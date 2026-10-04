@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "Ø 90 × 162 mm",
   "project": "dragee-tube",
-  "variant": "dots"
+  "variant": "dots",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1774,
+    "height": 887
+  },
+  "nativeFrontPixels": {
+    "width": 887,
+    "height": 887
+  },
+  "nominalFrontDpi": 143.5,
+  "seamStrategy": "single-continuous-wrap-with-common-quiet-join",
+  "sourceSha256": "154d7fdd967a23e5bcd92b8e7d78c46c39c1c6ee39852b4a0a218fdc30d24d48"
 }

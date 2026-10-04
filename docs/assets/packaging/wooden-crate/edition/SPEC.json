@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "240 × 64 × 106 mm",
   "project": "wooden-crate",
-  "variant": "edition"
+  "variant": "edition",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1672,
+    "height": 941
+  },
+  "nativeFrontPixels": {
+    "width": 1672,
+    "height": 469
+  },
+  "nominalFrontDpi": 177,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "077e5d0dff62615664bd19758e44934335cd5f28c7be41820f7e6c1e74d2464f"
 }

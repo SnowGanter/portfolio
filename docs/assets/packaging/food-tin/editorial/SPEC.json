@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "Ø 77 × 75 mm",
   "project": "food-tin",
-  "variant": "editorial"
+  "variant": "editorial",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 2172,
+    "height": 724
+  },
+  "nativeFrontPixels": {
+    "width": 1086,
+    "height": 724
+  },
+  "nominalFrontDpi": 203.2,
+  "seamStrategy": "single-continuous-wrap-with-common-quiet-join",
+  "sourceSha256": "0e506e548095628c5ac872716cee85e89012abe1c3681732b1bd287070c3fbc2"
 }

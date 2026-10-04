@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "56 × 103 × 30 mm",
   "project": "flip-top-pack",
-  "variant": "noir"
+  "variant": "noir",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1254,
+    "height": 1254
+  },
+  "nativeFrontPixels": {
+    "width": 625,
+    "height": 1254
+  },
+  "nominalFrontDpi": 203.2,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "19ee8d4a05c20ac5c0680e0162a7ad691dcec8edfa37e17979d24d46fd09ee9e"
 }

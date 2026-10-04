@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "100 × 238 × 72 mm",
   "project": "milk-carton",
-  "variant": "blue"
+  "variant": "blue",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1254,
+    "height": 1254
+  },
+  "nativeFrontPixels": {
+    "width": 625,
+    "height": 1254
+  },
+  "nominalFrontDpi": 158.8,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "4feef063b58d8be0b4afbb7188d53a6f1959c70a390b2739d217bd5fbee6ca0d"
 }

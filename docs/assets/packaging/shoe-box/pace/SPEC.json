@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "350 × 135 × 240 mm",
   "project": "shoe-box",
-  "variant": "pace"
+  "variant": "pace",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1672,
+    "height": 941
+  },
+  "nativeFrontPixels": {
+    "width": 1672,
+    "height": 549
+  },
+  "nominalFrontDpi": 121.3,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "7c1326033df38bec40cc4494eba648c2989ee8780a75f3594975b466d9ccf025"
 }

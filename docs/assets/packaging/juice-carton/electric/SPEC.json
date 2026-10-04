@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "100 × 238 × 72 mm",
   "project": "juice-carton",
-  "variant": "electric"
+  "variant": "electric",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1254,
+    "height": 1254
+  },
+  "nativeFrontPixels": {
+    "width": 625,
+    "height": 1254
+  },
+  "nominalFrontDpi": 158.8,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "f8aa91223a04675aea9e54471ad963fac22bd674b0389a375078723e11efa8b8"
 }

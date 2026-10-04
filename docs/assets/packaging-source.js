@@ -1,7 +1,7 @@
 // CC0 Poly Haven geometry, not an approximation of the supplied Blender models.
 // Source UVs remain untouched for normal/roughness maps. A second UV set carries
 // new artwork, so replacing a label cannot erase folds, stitching or metal rims.
-import {printUV} from './packaging-print-spec.js?v=3dbf7e2dfbbf';
+import {printUV} from './packaging-print-spec.js?v=b557ee0f9f7a';
 export async function loadPackagingSource(T,config,materials,decorate) {
   const loader=new T.GLTFLoader();
   let timer;

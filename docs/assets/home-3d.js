@@ -1,6 +1,6 @@
-import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=3dbf7e2dfbbf';
-import { createDesignWord, getDesignFraming } from './design-geometry.js?v=3dbf7e2dfbbf';
-import { createDesignGlass } from './design-glass.js?v=3dbf7e2dfbbf';
+import { createDesignPhysics, canAnimate, clamp, CLICK_IMPULSE, MAX_TRANSLATION, MAX_SWING, REST_TILT_BOUND } from './design-physics.js?v=b557ee0f9f7a';
+import { createDesignWord, getDesignFraming } from './design-geometry.js?v=b557ee0f9f7a';
+import { createDesignGlass } from './design-glass.js?v=b557ee0f9f7a';
 
 const stage = document.querySelector('[data-design-stage]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -43,8 +43,8 @@ async function initialize(stage) {
     const probe = document.createElement('canvas').getContext('webgl2');
     if (!probe) return fallback();
     probe.getExtension('WEBGL_lose_context')?.loseContext();
-    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=3dbf7e2dfbbf'), import('./vendor/cannon.js?v=3dbf7e2dfbbf')]);
-    const response = await fetch(new URL('./fonts/design.typeface.json?v=3dbf7e2dfbbf', import.meta.url), { signal: AbortSignal.timeout(12000) });
+    const [THREE, C] = await Promise.all([import('./vendor/three.js?v=b557ee0f9f7a'), import('./vendor/cannon.js?v=b557ee0f9f7a')]);
+    const response = await fetch(new URL('./fonts/design.typeface.json?v=b557ee0f9f7a', import.meta.url), { signal: AbortSignal.timeout(12000) });
     if (!response.ok) throw new Error('Font unavailable');
     const font = new THREE.FontLoader().parse(await response.json());
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });

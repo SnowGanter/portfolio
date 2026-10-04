@@ -31,8 +31,8 @@ export function makePackagingModel(T, project, materials) {
       add(geo,materials[side===1?4:5]);
     }
     // Heat-welded crimping is built into the film, not a row of grey cubes.
-    const fin=add(new T.RoundedBoxGeometry(w*.035,h*.89,.025,2,.008),materials[5],0,0,-d*.48);fin.name='rear-fin-seal';
-    if(project.id==='candy-pack')for(const side of [-1,1])add(new T.RoundedBoxGeometry(w*.86,.018,.023,2,.007),materials[side>0?4:5],0,h*.35,side*d*.28);
+    const fin=add(new T.RoundedBoxGeometry(w*.035,h*.89,.025,2,.008),materials[3],0,0,-d*.48);fin.name='rear-fin-seal';
+    if(project.id==='candy-pack')for(const side of [-1,1])add(new T.RoundedBoxGeometry(w*.86,.018,.023,2,.007),materials[3],0,h*.35,side*d*.28);
   } else if(project.model==='tube') {
     const tube=new T.CylinderGeometry(w*.5,w*.5,h-.08,128,6,false),uv=tube.attributes.uv;
     for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)+.25);

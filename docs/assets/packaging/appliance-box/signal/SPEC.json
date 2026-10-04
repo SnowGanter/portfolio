@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "280 × 280 × 230 mm",
   "project": "appliance-box",
-  "variant": "signal"
+  "variant": "signal",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1774,
+    "height": 887
+  },
+  "nativeFrontPixels": {
+    "width": 885,
+    "height": 887
+  },
+  "nominalFrontDpi": 80.3,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "fb2906c1d906ab51ee8993ffd63066555e3c82418028ff635ecc6ecfdc87f2dc"
 }

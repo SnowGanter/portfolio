@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "350 × 135 × 240 mm",
   "project": "shoe-box",
-  "variant": "after"
+  "variant": "after",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1672,
+    "height": 941
+  },
+  "nativeFrontPixels": {
+    "width": 1672,
+    "height": 539
+  },
+  "nominalFrontDpi": 121.2,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "975b9a7062aee889b213a01a1155119b8e4eb9d5e84fd6eea26f67cc94b600b2"
 }

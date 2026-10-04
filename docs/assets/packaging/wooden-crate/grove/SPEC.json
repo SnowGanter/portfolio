@@ -12,8 +12,20 @@
   "units": "mm",
   "sizeOrigin": "proposed-not-measured",
   "colorSpace": "sRGB",
-  "font": "Rubik SemiBold 650 · outlined",
+  "font": "AI-generated raster lettering · native pixels",
   "dimensions": "240 × 64 × 106 mm",
   "project": "wooden-crate",
-  "variant": "grove"
+  "variant": "grove",
+  "artworkType": "AI-generated raster",
+  "nativePixels": {
+    "width": 1870,
+    "height": 841
+  },
+  "nativeFrontPixels": {
+    "width": 1870,
+    "height": 419
+  },
+  "nominalFrontDpi": 166.3,
+  "seamStrategy": "intact-artwork-panels-with-common-quiet-fold-perimeter",
+  "sourceSha256": "d546e3af20743f32c9b24d0ae47e52e2d2b14a6ecbba3cff027caeadb460c4e8"
 }
