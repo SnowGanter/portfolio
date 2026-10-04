@@ -1,7 +1,26 @@
-import * as T from './vendor/packaging-three.js?v=964a79595843';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=964a79595843';
-import {loadPackagingSource} from './packaging-source.js?v=964a79595843';
+import * as T from './vendor/packaging-three.js?v=e68da53096e6';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=e68da53096e6';
+import {loadPackagingSource} from './packaging-source.js?v=e68da53096e6';
 const root=document.querySelector('[data-packaging-viewer]');
+const printStudy=document.querySelector('[data-print-study]');
+if(printStudy){
+  printStudy.dataset.enhanced='true';
+  const panels=[...printStudy.querySelectorAll('[data-print-variant]')];
+  const guide=printStudy.querySelector('[data-print-guides]');
+  const display=id=>{
+    for(const panel of panels)panel.hidden=panel.dataset.printVariant!==id;
+    printStudy.querySelector('[data-print-unavailable]').hidden=panels.some(p=>p.dataset.printVariant===id);
+    printStudy.dataset.design=id;
+  };
+  const initial=JSON.parse(root.querySelector('[data-packaging-config]').textContent).variants;
+  const requested=new URL(location.href).searchParams.get('design');
+  display(initial.find(v=>v.id===requested)?.id||initial[0].id);
+  root.addEventListener('portfolio:designchange',event=>display(event.detail.id));
+  guide.addEventListener('change',()=>{
+    for(const img of printStudy.querySelectorAll('[data-print-image]'))img.src=guide.checked?img.dataset.layout:img.dataset.artwork;
+    printStudy.querySelector('.print-legend').hidden=!guide.checked;
+  });
+}
 if(root) start(root);
 async function start(root) {
   const config=JSON.parse(root.querySelector('[data-packaging-config]').textContent);
@@ -126,12 +145,16 @@ async function start(root) {
       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#ifdef USE_MAP
         vec2 artUv=${source?'vDesignUv':'vMapUv'};
         vec4 oldCoat=texture2D(uArt,artUv);vec4 newCoat=texture2D(uNext,artUv);
-        ${source?'vec4 stockCoat=texture2D(uStock,vMapUv);oldCoat=mix(oldCoat,stockCoat,uOriginal);newCoat=mix(newCoat,stockCoat,uNextOriginal);':''}
+        ${source?'vec4 stockCoat=texture2D(uStock,vMapUv);'+(m.userData.nonPrint?'oldCoat=mix(vec4(.48,.49,.46,1.),stockCoat,uOriginal);newCoat=mix(vec4(.48,.49,.46,1.),stockCoat,uNextOriginal);':'oldCoat=mix(oldCoat,stockCoat,uOriginal);newCoat=mix(newCoat,stockCoat,uNextOriginal);'):''}
         ${wood?'oldCoat.rgb*=mix(vec3(1.),stockCoat.rgb,.22*(1.-uOriginal));newCoat.rgb*=mix(vec3(1.),stockCoat.rgb,.22*(1.-uNextOriginal));':''}
         float edge=uCoat*1.3-.15;float coat=smoothstep(artUv.x*.72+(1.-artUv.y)*.28-.08,artUv.x*.72+(1.-artUv.y)*.28+.08,edge);
         diffuseColor*=mix(oldCoat,newCoat,coat);
         #endif`);
-    };m.customProgramCacheKey=()=> 'packaging-coat-3-'+source+'-'+wood;
+      if(source&&!wood&&config.id!=='textile-pillow')shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+        float oldRoughness=mix(0.72,roughnessFactor,uOriginal);
+        float newRoughness=mix(0.72,roughnessFactor,uNextOriginal);
+        roughnessFactor=mix(oldRoughness,newRoughness,uCoat);`);
+    };m.customProgramCacheKey=()=> 'packaging-coat-5-'+source+'-'+wood+'-'+!!m.userData.nonPrint;
   }
   try {
     renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'low-power'});

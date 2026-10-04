@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "film",
+  "w": 280,
+  "h": 210,
+  "d": 70,
+  "bodyH": 210,
+  "bleed": 3,
+  "safe": 5,
+  "seam": 10,
+  "status": "concept-not-production-approved",
+  "units": "mm",
+  "sizeOrigin": "proposed-not-measured",
+  "colorSpace": "sRGB",
+  "font": "Rubik Regular · outlined",
+  "dimensions": "280 × 210 × 70 mm",
+  "project": "candy-pack",
+  "variant": "play"
+}

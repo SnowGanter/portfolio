@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "flip",
+  "w": 56,
+  "h": 103,
+  "d": 30,
+  "bodyH": 103,
+  "bleed": 3,
+  "safe": 5,
+  "seam": 12,
+  "status": "concept-not-production-approved",
+  "units": "mm",
+  "sizeOrigin": "proposed-not-measured",
+  "colorSpace": "sRGB",
+  "font": "Rubik Regular · outlined",
+  "dimensions": "56 × 103 × 30 mm",
+  "project": "flip-top-pack",
+  "variant": "terracotta"
+}

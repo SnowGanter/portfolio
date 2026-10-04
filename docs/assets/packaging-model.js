@@ -44,8 +44,8 @@ export function makePackagingModel(T, project, materials) {
     const stock=plain('#cdbb9e'),bodyH=h-.22,t=.035;
     const rounded=(a,b,c)=>new T.RoundedBoxGeometry(a,b,c,3,Math.min(.015,a/5,b/5,c/5));
     add(rounded(w,t,d),materials[3],0,-h*.5,0);
-    for(const side of [-1,1])add(rounded(t,bodyH,d),materials[side>0?0:1],side*w*.5,-.11,0);
-    add(rounded(w,bodyH,t),materials[5],0,-.11,-d*.5);
+    for(const side of [-1,1]){const walls=[stock,stock,stock,stock,stock,stock];walls[side>0?0:1]=materials[side>0?0:1];add(rounded(t,bodyH,d),walls,side*w*.5,-.11,0);}
+    add(rounded(w,bodyH,t),[stock,stock,stock,stock,stock,materials[5]],0,-.11,-d*.5);
     const shape=new T.Shape(),top=bodyH*.5;
     shape.moveTo(-w*.5,-top);shape.lineTo(w*.5,-top);shape.lineTo(w*.5,top);shape.lineTo(.16,top);shape.absarc(0,top,.16,0,-Math.PI,true);shape.lineTo(-w*.5,top);shape.closePath();
     const geo=new T.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelThickness:.002,bevelSize:.002,bevelSegments:2,curveSegments:32});
@@ -55,8 +55,8 @@ export function makePackagingModel(T, project, materials) {
     const lid=add(rounded(w+.1,.055,d+.1),[stock,stock,materials[2],stock,stock,stock],0,h*.5+.04,0);lid.name='separate-lid';
     const edgeGeo=(a,b,c)=>{const g=rounded(a,b,c),uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setY(i,uv.getY(i)*.045);return g;};
     for(const side of [-1,1]){
-      add(edgeGeo(w+.1,.18,t),materials[2],0,h*.5-.073,side*(d*.5+.033));
-      add(edgeGeo(t,.18,d+.06),materials[2],side*(w*.5+.033),h*.5-.073,0);
+      add(edgeGeo(w+.1,.18,t),[stock,stock,stock,stock,materials[2],materials[2]],0,h*.5-.073,side*(d*.5+.033));
+      add(edgeGeo(t,.18,d+.06),[materials[2],materials[2],stock,stock,stock,stock],side*(w*.5+.033),h*.5-.073,0);
     }
   } else {
     add(new T.RoundedBoxGeometry(w,h,d,3,.02),materials);
@@ -72,10 +72,14 @@ export function makePackagingModel(T, project, materials) {
       cap.rotation.z=-Math.atan(.48/(w*.5));
     } else {
       const tape=new T.MeshPhysicalMaterial({color:'#be9859',roughness:.47,transparent:true,opacity:.45,depthWrite:false});
-      for(const side of [-1,1])add(new T.RoundedBoxGeometry(w*.49,.012,d*.985,2,.004),materials[2],side*w*.25,h*.5+.008,0);
-      add(new T.BoxGeometry(.006,.014,d*.99),plain('#736d62'),0,h*.5+.01,0);
-      add(new T.BoxGeometry(.23,.004,d*.999),tape,0,h*.5+.018,0);
-      for(const side of [-1,1])add(new T.BoxGeometry(.23,.32,.005),tape,0,h*.5-.14,side*(d*.5+.008));
+      for(const side of [-1,1]){
+        const flap=add(new T.RoundedBoxGeometry(w*.985,.012,d*.49,2,.004),materials[2],0,h*.5+.008,side*d*.25);
+        const pos=flap.geometry.attributes.position,uv=flap.geometry.attributes.uv;
+        for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)+w*.5)/w,1-(pos.getZ(i)+side*d*.25+d*.5)/d);
+      }
+      add(new T.BoxGeometry(w*.99,.014,.006),plain('#736d62'),0,h*.5+.01,0);
+      add(new T.BoxGeometry(w*.999,.004,.23),tape,0,h*.5+.018,0);
+      for(const side of [-1,1])add(new T.BoxGeometry(.005,.32,.23),tape,side*(w*.5+.008),h*.5-.14,0);
     }
   }
   return group;

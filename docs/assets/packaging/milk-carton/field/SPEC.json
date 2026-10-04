@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "carton",
+  "w": 100,
+  "h": 238,
+  "d": 72,
+  "bodyH": 180.88,
+  "bleed": 3,
+  "safe": 5,
+  "seam": 12,
+  "status": "concept-not-production-approved",
+  "units": "mm",
+  "sizeOrigin": "proposed-not-measured",
+  "colorSpace": "sRGB",
+  "font": "Rubik Regular · outlined",
+  "dimensions": "100 × 238 × 72 mm",
+  "project": "milk-carton",
+  "variant": "field"
+}

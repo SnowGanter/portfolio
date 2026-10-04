@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "box",
+  "w": 280,
+  "h": 280,
+  "d": 230,
+  "bodyH": 280,
+  "bleed": 3,
+  "safe": 5,
+  "seam": 12,
+  "status": "concept-not-production-approved",
+  "units": "mm",
+  "sizeOrigin": "proposed-not-measured",
+  "colorSpace": "sRGB",
+  "font": "Rubik Regular · outlined",
+  "dimensions": "280 × 280 × 230 mm",
+  "project": "appliance-box",
+  "variant": "quiet"
+}

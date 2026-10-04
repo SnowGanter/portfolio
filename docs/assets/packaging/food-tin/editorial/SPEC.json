@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "label",
+  "w": 77,
+  "h": 75,
+  "d": 77,
+  "bodyH": 63,
+  "bleed": 3,
+  "safe": 5,
+  "seam": 5,
+  "status": "concept-not-production-approved",
+  "units": "mm",
+  "sizeOrigin": "proposed-not-measured",
+  "colorSpace": "sRGB",
+  "font": "Rubik Regular · outlined",
+  "dimensions": "Ø 77 × 75 mm",
+  "project": "food-tin",
+  "variant": "editorial"
+}

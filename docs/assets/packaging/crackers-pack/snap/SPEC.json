@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "film",
+  "w": 175,
+  "h": 265,
+  "d": 65,
+  "bodyH": 265,
+  "bleed": 3,
+  "safe": 5,
+  "seam": 10,
+  "status": "concept-not-production-approved",
+  "units": "mm",
+  "sizeOrigin": "proposed-not-measured",
+  "colorSpace": "sRGB",
+  "font": "Rubik Regular · outlined",
+  "dimensions": "175 × 265 × 65 mm",
+  "project": "crackers-pack",
+  "variant": "snap"
+}

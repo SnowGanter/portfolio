@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "tray",
+  "w": 350,
+  "h": 135,
+  "d": 240,
+  "bodyH": 113,
+  "bleed": 3,
+  "safe": 5,
+  "seam": 12,
+  "status": "concept-not-production-approved",
+  "units": "mm",
+  "sizeOrigin": "proposed-not-measured",
+  "colorSpace": "sRGB",
+  "font": "Rubik Regular · outlined",
+  "dimensions": "350 × 135 × 240 mm",
+  "project": "shoe-box",
+  "variant": "pace"
+}
