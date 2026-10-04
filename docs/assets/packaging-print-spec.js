@@ -16,7 +16,7 @@ export function printSpec(project){
   const bodyH=kind==='carton'?h*.76:kind==='tray'?h-22:project.id==='food-tin'?h*.84:project.model==='tube'?h*(1-.08/project.dimensions[1]):h;
   return {version:1,kind,w,h,d,bodyH,bleed:3,safe:5,seam:kind==='film'?10:kind==='label'?5:12,
     status:'concept-not-production-approved',units:'mm',sizeOrigin:'proposed-not-measured',
-    colorSpace:'sRGB',font:'Rubik Regular · outlined',
+    colorSpace:'sRGB',font:'Rubik SemiBold 650 · outlined',
     dimensions:kind==='label'?`Ø ${w} × ${h} mm`:`${w} × ${h} × ${d} mm`};
 }
 export function printFaceSize(project,face){

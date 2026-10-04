@@ -1,6 +1,6 @@
-import * as T from './vendor/packaging-three.js?v=6cda2c95331f';
-import {makePackagingModel,framePackaging} from './packaging-model.js?v=6cda2c95331f';
-import {loadPackagingSource} from './packaging-source.js?v=6cda2c95331f';
+import * as T from './vendor/packaging-three.js?v=3dbf7e2dfbbf';
+import {makePackagingModel,framePackaging} from './packaging-model.js?v=3dbf7e2dfbbf';
+import {loadPackagingSource} from './packaging-source.js?v=3dbf7e2dfbbf';
 const root=document.querySelector('[data-packaging-viewer]');
 const printStudy=document.querySelector('[data-print-study]');
 if(printStudy){
@@ -32,7 +32,7 @@ async function start(root) {
   const selected=()=>Math.max(0,config.variants.findIndex(v=>v.id===new URL(location.href).searchParams.get('design')));
   let current=selected(),transition=null,queued=null,request=0,pendingInitial=null;
   const textureCache=new Map(),points=new Map();
-  let pinch=0;
+  let pinch=0,midpoint=null,panX=0,panY=0,panMode=false,dragPan=false;
   const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
   function recordDesign(index){
     const destination=new URL(location.href);destination.searchParams.set('design',config.variants[index].id);
@@ -76,10 +76,11 @@ async function start(root) {
     return textureCache.get(index);
   }
   const needsFrame=()=>!!model&&!lost&&!document.hidden&&(visible||transition);
-  function render() {if(renderer&&!lost){renderer.render(scene,camera);if(model){root.dataset.pose=[model.rotation.x,model.rotation.y,model.position.y].map(n=>n.toFixed(4)).join(',');root.dataset.zoom=zoom.toFixed(3);root.dataset.time=time.toFixed(3);}}}
+  function render() {if(renderer&&!lost){renderer.render(scene,camera);if(model){root.dataset.pose=[model.rotation.x,model.rotation.y,model.position.y].map(n=>n.toFixed(4)).join(',');root.dataset.zoom=zoom.toFixed(3);root.dataset.pan=[panX,panY].map(n=>n.toFixed(4)).join(',');root.dataset.time=time.toFixed(3);}}}
   function pose() {
     model.rotation.set(turnX,turnY+Math.sin(time*.38)*.07,0);
-    model.position.y=Math.sin(time*.65)*.025;
+    model.position.set(0,Math.sin(time*.65)*.025,0);
+    camera.position.set(-panX,.12-panY,camera.position.z);camera.lookAt(-panX,.13-panY,0);
   }
   function tick(now) {
     raf=0;if(!needsFrame())return;
@@ -108,7 +109,8 @@ async function start(root) {
   function size(){
     if(!renderer)return;
     const box=stage.getBoundingClientRect(),a=Math.max(1,box.width)/Math.max(1,box.height),distance=framePackaging(model?.userData.dimensions||config.dimensions,a);
-    renderer.setSize(box.width,box.height,false);camera.aspect=a;camera.position.set(0,.12,distance/zoom);camera.lookAt(0,.13,0);camera.updateProjectionMatrix();render();
+    // Optical zoom keeps the camera outside the mesh, even at close magnification.
+    renderer.setSize(box.width,box.height,false);camera.aspect=a;camera.zoom=zoom;camera.position.set(-panX,.12-panY,distance);camera.lookAt(-panX,.13-panY,0);camera.updateProjectionMatrix();render();
   }
   async function change(index,record=true) {
     if(lost){fallbackChange(index,record);return;}
@@ -146,15 +148,14 @@ async function start(root) {
         vec2 artUv=${source?'vDesignUv':'vMapUv'};
         vec4 oldCoat=texture2D(uArt,artUv);vec4 newCoat=texture2D(uNext,artUv);
         ${source?'vec4 stockCoat=texture2D(uStock,vMapUv);'+(m.userData.nonPrint?'oldCoat=mix(vec4(.48,.49,.46,1.),stockCoat,uOriginal);newCoat=mix(vec4(.48,.49,.46,1.),stockCoat,uNextOriginal);':'oldCoat=mix(oldCoat,stockCoat,uOriginal);newCoat=mix(newCoat,stockCoat,uNextOriginal);'):''}
-        ${wood?'oldCoat.rgb*=mix(vec3(1.),stockCoat.rgb,.22*(1.-uOriginal));newCoat.rgb*=mix(vec3(1.),stockCoat.rgb,.22*(1.-uNextOriginal));':''}
         float edge=uCoat*1.3-.15;float coat=smoothstep(artUv.x*.72+(1.-artUv.y)*.28-.08,artUv.x*.72+(1.-artUv.y)*.28+.08,edge);
         diffuseColor*=mix(oldCoat,newCoat,coat);
         #endif`);
-      if(source&&!wood&&config.id!=='textile-pillow')shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
+      if(source&&config.id!=='textile-pillow')shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
         float oldRoughness=mix(0.72,roughnessFactor,uOriginal);
         float newRoughness=mix(0.72,roughnessFactor,uNextOriginal);
         roughnessFactor=mix(oldRoughness,newRoughness,uCoat);`);
-    };m.customProgramCacheKey=()=> 'packaging-coat-5-'+source+'-'+wood+'-'+!!m.userData.nonPrint;
+    };m.customProgramCacheKey=()=> 'packaging-coat-6-'+source+'-'+wood+'-'+!!m.userData.nonPrint;
   }
   try {
     renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'low-power'});
@@ -196,27 +197,36 @@ async function start(root) {
   canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();fail();});
   canvas.addEventListener('webglcontextrestored',()=>location.reload());
   const point=event=>({x:event.clientX,y:event.clientY});
-  canvas.addEventListener('pointerdown',event=>{if(event.button!==0)return;canvas.setPointerCapture(event.pointerId);points.set(event.pointerId,point(event));drag=point(event);if(points.size===2){const[a,b]=[...points.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);}else pinch=0;canvas.dataset.dragging='true';});
+  function pan(dx,dy){
+    const box=stage.getBoundingClientRect(),height=2*camera.position.z*Math.tan(camera.fov*Math.PI/360)/zoom;
+    panX=clamp(panX+dx/box.height*height,-8,8);panY=clamp(panY-dy/box.height*height,-8,8);
+  }
+  function setPan(value){panMode=value;root.querySelector('[data-pack-pan]').setAttribute('aria-pressed',String(value));canvas.dataset.pan=String(value);}
+  function setZoom(value){zoom=clamp(value,.7,6);size();}
+  canvas.addEventListener('contextmenu',event=>event.preventDefault());
+  canvas.addEventListener('pointerdown',event=>{if(event.button!==0&&event.button!==2)return;canvas.setPointerCapture(event.pointerId);points.set(event.pointerId,point(event));drag=point(event);dragPan=panMode||event.shiftKey||event.button===2;if(points.size===2){const[a,b]=[...points.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);midpoint={x:(a.x+b.x)/2,y:(a.y+b.y)/2};}else{pinch=0;midpoint=null;}canvas.dataset.dragging='true';});
   canvas.addEventListener('pointermove',event=>{
     if(!points.has(event.pointerId))return;
     const next=point(event);points.set(event.pointerId,next);
-    if(points.size===2){const [a,b]=[...points.values()];const distance=Math.hypot(a.x-b.x,a.y-b.y);if(pinch){zoom=clamp(zoom*distance/pinch,.7,1.9);size();}pinch=distance;}
-    else if(drag){turnY+=(next.x-drag.x)*.008;turnX=clamp(turnX+(next.y-drag.y)*.006,-1.1,1.1);}
+    if(points.size===2){const [a,b]=[...points.values()];const distance=Math.hypot(a.x-b.x,a.y-b.y),mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};if(pinch)setZoom(zoom*distance/pinch);if(midpoint)pan(mid.x-midpoint.x,mid.y-midpoint.y);pinch=distance;midpoint=mid;}
+    else if(drag){if(dragPan)pan(next.x-drag.x,next.y-drag.y);else{turnY+=(next.x-drag.x)*.008;turnX=clamp(turnX+(next.y-drag.y)*.006,-1.1,1.1);}}
     drag=next;pose();render();
   });
-  const end=event=>{points.delete(event.pointerId);pinch=0;drag=points.size?[...points.values()][0]:null;if(!drag){delete canvas.dataset.dragging;wake();}};
+  const end=event=>{points.delete(event.pointerId);pinch=0;midpoint=null;drag=points.size?[...points.values()][0]:null;if(!drag){delete canvas.dataset.dragging;wake();}};
   canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);canvas.addEventListener('lostpointercapture',end);
-  canvas.addEventListener('wheel',event=>{if(event.ctrlKey)return;event.preventDefault();zoom=clamp(zoom*Math.exp(-event.deltaY*.001),.7,1.9);size();},{passive:false});
+  canvas.addEventListener('wheel',event=>{if(event.ctrlKey)return;event.preventDefault();setZoom(zoom*Math.exp(-event.deltaY*.001));},{passive:false});
   canvas.addEventListener('keydown',event=>{
-    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home',' '].includes(event.key))return;event.preventDefault();
-    if(event.key==='Home')reset();else if(event.key===' ')togglePause();else{turnY+=(event.key==='ArrowLeft'?-.15:event.key==='ArrowRight'?.15:0);turnX=clamp(turnX+(event.key==='ArrowUp'?-.1:event.key==='ArrowDown'?.1:0),-1.1,1.1);pose();render();}
+    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home',' ','+','=','-','_'].includes(event.key))return;event.preventDefault();
+    if(event.key==='Home')reset();else if(event.key===' ')togglePause();else if(['+','=','-','_'].includes(event.key))setZoom(zoom*(['+','='].includes(event.key)?1.2:1/1.2));else{if(event.shiftKey||panMode)pan(event.key==='ArrowLeft'?-24:event.key==='ArrowRight'?24:0,event.key==='ArrowUp'?-24:event.key==='ArrowDown'?24:0);else{turnY+=(event.key==='ArrowLeft'?-.15:event.key==='ArrowRight'?.15:0);turnX=clamp(turnX+(event.key==='ArrowUp'?-.1:event.key==='ArrowDown'?.1:0),-1.1,1.1);}pose();render();}
   });
-  function reset(){[turnX,turnY]=config.view||[.08,-.38];zoom=1;time=0;pose();size();wake();}
+  function reset(){[turnX,turnY]=config.view||[.08,-.38];zoom=1;panX=panY=0;setPan(false);time=0;pose();size();wake();}
   function togglePause(){userPaused=!userPaused;const b=root.querySelector('[data-pack-pause]');b.setAttribute('aria-pressed',String(userPaused));b.textContent=userPaused?config.strings.play:config.strings.pause;pose();render();wake();}
   root.querySelector('[data-pack-reset]').addEventListener('click',reset);
   root.querySelector('[data-pack-pause]').addEventListener('click',togglePause);
-  root.querySelector('[data-pack-zoom-in]').addEventListener('click',()=>{zoom=clamp(zoom*1.15,.7,1.9);size();});
-  root.querySelector('[data-pack-zoom-out]').addEventListener('click',()=>{zoom=clamp(zoom/1.15,.7,1.9);size();});
+  root.querySelector('[data-pack-zoom-in]').addEventListener('click',()=>setZoom(zoom*1.2));
+  root.querySelector('[data-pack-zoom-out]').addEventListener('click',()=>setZoom(zoom/1.2));
+  root.querySelector('[data-pack-pan]').addEventListener('click',()=>setPan(!panMode));
+  root.querySelector('[data-pack-inspect]').addEventListener('click',()=>{if(!userPaused)togglePause();setPan(true);setZoom(2.8);});
   const full=root.querySelector('[data-pack-fullscreen]');
   if(!document.fullscreenEnabled)full.hidden=true;
   full.addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await root.requestFullscreen();}catch{status.textContent=config.strings.fullFailed;}});

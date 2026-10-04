@@ -81,8 +81,24 @@
 .texture-details > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-top: 8px; }
 .texture-details a { display: grid; gap: 8px; }
 .texture-details img { width: 100%; height: 280px; object-fit: contain; background: #eef0f3; }
-.play-pager { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 24px; margin-top: 36px; border-top: 1px solid var(--line); font-size: 14px; }
-.play-pager a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); }
+.play-pager { position: relative; height: 44px; margin-top: 30px; }
+.play-pager a { position: fixed; z-index: 35; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 52px; border: 1px solid var(--line); border-radius: 12px; background: #f8f9fcf2; color: var(--accent); box-shadow: 0 4px 18px #1723480a; font-size: 22px; }
+.play-pager a:first-child { left: 8px; }
+.play-pager a:last-child { right: 8px; }
+@media(min-width:1101px) { .pack-case { padding-inline: 8px; } }
+.pager-label { position: absolute; top: 60px; font-size: 10px; white-space: nowrap; opacity: 0; pointer-events: none; padding: 7px 10px; border-radius: 5px; background: var(--surface); color: var(--muted); }
+.play-pager a:first-child .pager-label { left: 0; }
+.play-pager a:last-child .pager-label { right: 0; }
+.play-pager a:hover .pager-label, .play-pager a:focus-visible .pager-label { opacity: 1; }
+.pack-toolbar [aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.pack-toolbar [data-pack-inspect] { color: var(--accent); background: var(--accent-soft); }
+.print-legend .print-bleed { border-color: #c49736; border-top-style: dashed; }
+@media(max-width:1100px) {
+  .play-pager a { top: auto; bottom: max(14px,env(safe-area-inset-bottom)); transform: none; width: 44px; height: 44px; }
+  .play-pager a:first-child { left: 14px; } .play-pager a:last-child { right: 14px; }
+  .pager-label { top: auto; bottom: 50px; }
+  .pack-case { padding-bottom: 64px; }
+}
 .print-study { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); min-width: 0; }
 .print-study > header { display: flex; justify-content: space-between; align-items: end; gap: 24px; }
 .print-study h2 { margin: 0; font-size: clamp(28px,3.1vw,43px); font-weight: 600; letter-spacing: -.045em; }

@@ -1,7 +1,7 @@
 // CC0 Poly Haven geometry, not an approximation of the supplied Blender models.
 // Source UVs remain untouched for normal/roughness maps. A second UV set carries
 // new artwork, so replacing a label cannot erase folds, stitching or metal rims.
-import {printUV} from './packaging-print-spec.js?v=6cda2c95331f';
+import {printUV} from './packaging-print-spec.js?v=3dbf7e2dfbbf';
 export async function loadPackagingSource(T,config,materials,decorate) {
   const loader=new T.GLTFLoader();
   let timer;
@@ -27,7 +27,9 @@ export async function loadPackagingSource(T,config,materials,decorate) {
   const blended=[];
   for(const node of objects){
     const stock=node.material;
-    if(config.source.editNodes&&!config.source.editNodes.includes(node.name))continue;
+    if(config.source.editNodes&&!config.source.editNodes.includes(node.name)){
+      const neutral=stock.clone();neutral.map=null;neutral.color.set('#ddd4bd');neutral.roughnessMap=null;neutral.roughness=.75;node.material=neutral;continue;
+    }
     const geometry=node.geometry.toNonIndexed(),position=geometry.attributes.position;
     const designUV=new Float32Array(position.count*2),slot=new Int8Array(position.count/3);
     const faceType=config.source.mapping||'box';
@@ -68,6 +70,9 @@ export async function loadPackagingSource(T,config,materials,decorate) {
       decorate(m,true,faceType==='wood');blended.push(m);return m;
     });
     let unprinted=stock;
+    if(faceType==='wood'){
+      unprinted=stock.clone();unprinted.map=null;unprinted.color.set('#c6ab87');unprinted.roughnessMap=null;unprinted.roughness=.82;
+    }
     if(faceType==='cylinder'){
       // Source labels run onto the scanned rim. Keep the original in the CC0
       // option, but new designs use neutral metal, not fragments of old branding.
