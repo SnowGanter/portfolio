@@ -1,6 +1,6 @@
 # portfolio
 
-Design portfolio: Etsy, Amazon A+, Photoshop Scripts, ComfyUI, Packaging, UX/UI.
+Design portfolio: Etsy, Amazon A+, Photoshop Scripts, ComfyUI, UX/UI.
 
 Website: **https://cv-designer.me/**.
 
@@ -10,16 +10,14 @@ English is the default at [the portfolio](https://cv-designer.me/).
 the EN / UK / RU switch. Project and filter context is retained.
 
 Sections use clean URLs: `/etsy/`, `/amazon/`, `/photoshop/`, `/comfyui/`,
-`/packaging/`, `/ux-ui/`. Case studies live at `/projects/slug/`,
-`/packaging/slug/` and `/ux-ui/slug/`, also within `/uk/` and `/ru/`.
+`/ux-ui/`. Case studies live at `/projects/slug/`,
+`/amazon/slug/` and `/ux-ui/slug/`, also within `/uk/` and `/ru/`.
 Previous `.html` bookmarks redirect with their query and fragment intact.
 The homepage DESIGN gently sways left/right; an explicit push triggers a full turn.
 
-Packaging includes thirteen interactive volumetric mockups with animated artwork
-switching and 39 AI-generated raster designs. Cylindrical labels use continuous
-wraps; folded packs use matching quiet edges. Thirty-six packaging concepts have
-downloadable raster artwork and nominal structural layouts. These sRGB layouts
-are not manufacturer-approved dies or press-ready files. UX/UI opens three
+Packaging and product 3D were retired on 5 October 2026. Their source materials
+and last working release are retained only in the owner's local archive.
+The interactive homepage DESIGN remains unchanged. UX/UI opens three
 working, sandboxed sample websites with persistent
 portfolio controls. These new sample designs and fictional brands are explicitly
 labelled interaction concepts, not client commissions or confirmed owner work.
