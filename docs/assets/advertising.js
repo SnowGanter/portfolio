@@ -28,13 +28,13 @@ const page=document.querySelector('[data-ad-case]');
 if(page){
   const frames=[...page.querySelectorAll('[data-ad-format]')],buttons=[...page.querySelectorAll('[data-ad-select]')];
   const status=page.querySelector('[data-ad-status]'),error=page.querySelector('[data-ad-error]');
-  let active='feed',token=0;
+  let active='banner',token=0;
   for(const frame of frames){
     const img=frame.querySelector('img');
     img.addEventListener('error',()=>{if(frame.dataset.adFormat===active){status.textContent='';error.hidden=false;}});
     img.addEventListener('load',()=>{if(frame.dataset.adFormat===active)error.hidden=true;});
   }
-  const valid=value=>frames.some(f=>f.dataset.adFormat===value)?value:'feed';
+  const valid=value=>frames.some(f=>f.dataset.adFormat===value)?value:'banner';
   function state(value,push){
     active=valid(value);
     for(const f of frames){f.hidden=f.dataset.adFormat!==active;f.inert=f.hidden;}
@@ -47,6 +47,7 @@ if(page){
     const back=new URL(page.querySelector('[data-ad-back]').href,location.href);
     if(['product','travel','culture'].includes(category))back.searchParams.set('category',category);else back.searchParams.delete('category');
     page.querySelector('[data-ad-back]').href=back.pathname+back.search;
+    for(const link of page.querySelectorAll('.pf-campaign-case-pagination a')){const href=new URL(link.href,location.href);if(['product','travel','culture'].includes(category))href.searchParams.set('category',category);else href.searchParams.delete('category');link.href=href.pathname+href.search;}
     for(const b of [...buttons,...page.querySelectorAll('[data-ad-jump]')]){const href=new URL(location.href);href.hash='';href.searchParams.set('format',b.dataset.adSelect||b.dataset.adJump);b.href=href.pathname+href.search;}
     languageLinks();
   }
