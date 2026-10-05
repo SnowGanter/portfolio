@@ -152,6 +152,73 @@
   line-height: 1.65;
 }
 .pf-campaign-real-work { margin-top: 74px; }
+/* Additional executions are an editorial image sequence, not more format tabs. */
+.pf-campaign-series { margin: 58px 0 70px; }
+.pf-campaign-series > header {
+  display: grid;
+  grid-template-columns: minmax(0, .7fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 40px;
+  margin-bottom: 34px;
+}
+.pf-campaign-series h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 570;
+  letter-spacing: -.035em;
+  line-height: 1.25;
+}
+.pf-campaign-series > header p {
+  margin: 0;
+  max-width: 610px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+.pf-campaign-series-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr);
+  gap: 44px 28px;
+  align-items: start;
+}
+.pf-campaign-series-item { min-width: 0; margin: 0; }
+.pf-campaign-series-image { display: block; cursor: zoom-in; }
+.pf-campaign-series-image img { display: block; width: 100%; height: auto; }
+.pf-campaign-series-item:nth-child(2) { margin-top: 105px; }
+.pf-campaign-series-poster { max-width: 430px; justify-self: center; }
+.pf-campaign-series-editorial { grid-column: 1 / -1; }
+.pf-campaign-series-item figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin-top: 14px;
+}
+.pf-campaign-series-item h3 {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 550;
+}
+.pf-campaign-series-item figcaption > a {
+  color: var(--muted);
+  min-height: 30px;
+  padding-block: 5px;
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pf-campaign-series a:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+@media (max-width:720px) {
+  .pf-campaign-series { margin: 38px 0 44px; }
+  .pf-campaign-series > header { grid-template-columns: minmax(0,1fr); gap: 14px; margin-bottom: 25px; }
+  .pf-campaign-series > header p { font-size: 13px; }
+  .pf-campaign-series-grid { grid-template-columns: minmax(0,1fr); gap: 29px; }
+  .pf-campaign-series-item:nth-child(2) { margin-top: 0; }
+  .pf-campaign-series-poster { max-width: 100%; justify-self: stretch; }
+  .pf-campaign-series-item h3 { font-size: 12px; }
+}
 .pf-campaign-real-work h2 {
   margin: 0 0 26px;
   font-size: 28px;
