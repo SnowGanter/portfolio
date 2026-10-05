@@ -91,7 +91,7 @@
         }
       } catch {}
     }
-    if (!["etsy", "amazon", "photoshop", "comfyui"].includes(section)) return;
+    if (!["etsy", "amazon", "photoshop", "comfyui", "advertising"].includes(section)) return;
     const sectionLink = Array.from(document.querySelectorAll('.site-header .main-nav a')).find((link) => link.pathname.endsWith('/' + section + '/'));
     if (!sectionLink) return;
     const destination = new URL(sectionLink.pathname, location.origin);
