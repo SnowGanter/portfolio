@@ -1,4 +1,4 @@
-import {normalizeEtsyState,selectEtsyDesigns,etsyStateQuery} from './etsy-state.js?v=8d747ebbecde';
+import {normalizeEtsyState,selectEtsyDesigns,etsyStateQuery} from './etsy-state.js?v=fbad47650aee';
 
 const root = document.querySelector('[data-etsy-page]');
 if (root) {

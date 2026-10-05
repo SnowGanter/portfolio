@@ -60,14 +60,14 @@ if(page){
     state(id,push);status.textContent='';
     const f=frames.find(f=>f.dataset.adFormat===id);
     if(!reduced.matches)f.animate([{opacity:.55},{opacity:1}],{duration:180,easing:'ease-out'});
-    if(scroll)page.querySelector('.ad-showcase').scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'start'});
+    if(scroll)page.querySelector('.pf-campaign-showcase').scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'start'});
   }
   for(const b of [...buttons,...page.querySelectorAll('[data-ad-jump]')])b.addEventListener('click',event=>{
     if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
     event.preventDefault();change(b.dataset.adSelect||b.dataset.adJump,true,Boolean(b.dataset.adJump));
   });
-  page.querySelector('[data-ad-safe]').addEventListener('change',event=>page.classList.toggle('ad-show-safe',event.target.checked));
-  page.classList.add('ad-ready');state(new URL(location.href).searchParams.get('format'),false);
+  page.querySelector('[data-ad-safe]').addEventListener('change',event=>page.classList.toggle('pf-campaign-show-safe',event.target.checked));
+  page.classList.add('pf-campaign-ready');state(new URL(location.href).searchParams.get('format'),false);
   const first=frames.find(f=>f.dataset.adFormat===active).querySelector('img');
   if(first.complete&&!first.naturalWidth)error.hidden=false;
   addEventListener('popstate',()=>change(new URL(location.href).searchParams.get('format'),false));
