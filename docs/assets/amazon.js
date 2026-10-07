@@ -136,6 +136,7 @@
   // The 3D module owns design/history changes. Without it the links work natively.
   const sections=[...root.querySelectorAll('[data-amazon-search-section]')];
   const result=root.querySelector('[data-amazon-results]');
+  const searchField=root.querySelector('[data-amazon-search] input');
   root.querySelector('[data-amazon-search]').addEventListener('submit',event=>{
     event.preventDefault();
     const query=event.currentTarget.querySelector('input').value.trim().toLocaleLowerCase();
@@ -144,7 +145,14 @@
     const label=document.createElement('span');label.textContent=matches.length?root.dataset.searchResults:root.dataset.searchEmpty;result.append(label);
     for(const section of matches){const link=document.createElement('a');link.href='#'+section.id;link.textContent=section.querySelector('h2').textContent;result.append(link);}
   });
-  document.addEventListener('keydown',event=>{if(event.key==='Escape')result.hidden=true;});
+  function closeSearchResults(event) {
+    if(event.key!=='Escape'||event.defaultPrevented||result.hidden||document.querySelector('dialog[open]'))return;
+    event.preventDefault();
+    // Hiding a currently focused result must not drop focus onto body.
+    if(result.contains(document.activeElement))searchField.focus({preventScroll:true});
+    result.hidden=true;
+  }
+  document.addEventListener('keydown',closeSearchResults);
   const sectionLinks=[...root.querySelectorAll('.am-section-links a')];
   let navFrame=0,previousSection='';
   function updateNav() {
