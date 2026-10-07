@@ -19,40 +19,48 @@
     if (header) {
       const toggle = header.querySelector('[data-nav-toggle]');
       const navigation = header.querySelector('.main-nav');
-      if (toggle && navigation) {
+      const menu = header.querySelector('[data-mobile-menu]');
+      if (toggle && navigation && menu) {
         const compact = window.matchMedia('(max-width: 1000px)');
         const label = toggle.querySelector('[data-nav-label]');
-        let open = false;
         const renderMenu = () => {
-          navigation.hidden = compact.matches && !open;
-          toggle.hidden = !compact.matches;
-          toggle.setAttribute('aria-expanded', String(compact.matches && open));
-          toggle.setAttribute('aria-label', t(open ? 'Закрыть меню' : 'Открыть меню'));
-          // Keep the button width stable when expanded (especially in UK/RU).
-          // The icon and accessible name communicate the close action.
+          toggle.setAttribute('aria-label', t(menu.open ? 'Закрыть меню' : 'Открыть меню'));
+          // Native details provides the open state before/without JavaScript.
+          // Keep its visible label fixed so localized controls never widen.
           if (label) label.textContent = t('Меню');
-          header.classList.toggle('is-menu-open', compact.matches && open);
         };
-        toggle.addEventListener('click', () => { open = !open; renderMenu(); });
-        header.addEventListener('keydown', (event) => {
-          if (event.key !== 'Escape' || !compact.matches || !open) return;
+        menu.addEventListener('toggle', renderMenu);
+        menu.addEventListener('focusout', (event) => {
+          // This is a disclosure, not a modal: Tab can leave it, and the
+          // overlay must then stop covering the newly focused content.
+          if (compact.matches && menu.open && event.relatedTarget && !menu.contains(event.relatedTarget)) {
+            menu.open = false;
+            renderMenu();
+          }
+        });
+        document.addEventListener('keydown', (event) => {
+          if (event.key !== 'Escape' || !compact.matches || !menu.open || event.defaultPrevented || document.querySelector('dialog[open]')) return;
           event.preventDefault();
-          open = false;
+          menu.open = false;
           renderMenu();
           toggle.focus({ preventScroll: true });
         });
-        // Keep the complete static navigation when JavaScript is unavailable.
-        // Closing at a breakpoint must not leave focus in a hidden menu.
+        document.addEventListener('pointerdown', (event) => {
+          if (compact.matches && menu.open && !header.contains(event.target)) {
+            menu.open = false;
+            renderMenu();
+          }
+        });
+        // Switching to another layout must not leave focus inside hidden links.
         compact.addEventListener('change', () => {
           const active = document.activeElement;
           const restoreFocus = compact.matches && navigation.contains(active);
-          const restoreDesktopFocus = !compact.matches && active === toggle;
-          open = false;
+          const restoreDesktopFocus = !compact.matches && menu.contains(active);
+          menu.open = false;
           renderMenu();
           if (restoreFocus) toggle.focus({ preventScroll: true });
           if (restoreDesktopFocus) (navigation.querySelector('[aria-current="page"]') || navigation.querySelector('a'))?.focus({ preventScroll: true });
         });
-        header.classList.add('nav-ready');
         renderMenu();
       }
       const measure = () => document.documentElement.style.setProperty('--header-height', Math.ceil(header.getBoundingClientRect().height) + 'px');
@@ -301,7 +309,7 @@
       const focusedControl = document.activeElement;
       const actual = Math.abs(scale - 1) < 0.015;
       const realDesign = currentFrame()?.dataset.realOriginal === "true";
-      readout.value = Math.abs(scale - fitScale) < Math.max(0.015, fitScale * 0.015)
+      readout.value = Math.abs(scale - fitScale) < Math.max(0.00001, fitScale * 0.015)
         ? "Fit" : actual ? (realDesign ? "1:1" : t("1:1 файл")) :
           Math.round(scale / Math.max(fitScale, 0.001) * 100) + t("% от Fit");
       oneButton.disabled = !realDesign;
@@ -335,7 +343,7 @@
       if (!image.naturalWidth || !image.naturalHeight) return;
       const bounds = stage.getBoundingClientRect();
       const oldScale = scale;
-      const wasFit = Math.abs(oldScale - fitScale) < Math.max(0.015, fitScale * 0.015);
+      const wasFit = Math.abs(oldScale - fitScale) < Math.max(0.00001, fitScale * 0.015);
       fitScale = Math.min(Math.max(1, bounds.width - 24) / image.naturalWidth,
         Math.max(1, bounds.height - 24) / image.naturalHeight);
       minimumScale = Math.min(0.05, fitScale);
@@ -380,6 +388,9 @@
       lastTouchTap = 0;
       stage.classList.remove("is-dragging");
       stage.setAttribute("aria-busy", "true");
+      // Retrying hides the error actions; preserve keyboard focus inside the
+      // viewer instead of leaving it on a now-hidden/disabled control.
+      if (errorPanel.contains(document.activeElement) || zoomButtons.includes(document.activeElement)) stage.focus({ preventScroll: true });
       zoomButtons.forEach((button) => button.disabled = true);
       readout.value = "—";
       loader.hidden = false;
@@ -530,7 +541,7 @@
 
     function toggleDoubleTap(x, y) {
       const bounds = stage.getBoundingClientRect();
-      if (Math.abs(scale - fitScale) < Math.max(.015, fitScale * .015)) zoomTo(Math.min(maximumScale, Math.max(1, fitScale * 2)), x - bounds.left, y - bounds.top);
+      if (Math.abs(scale - fitScale) < Math.max(.00001, fitScale * .015)) zoomTo(Math.min(maximumScale, Math.max(1, fitScale * 2)), x - bounds.left, y - bounds.top);
       else fitImage();
       lastTouchZoom = performance.now();
     }

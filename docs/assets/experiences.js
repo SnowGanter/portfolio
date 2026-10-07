@@ -11,15 +11,26 @@
     for(const b of all('[data-product]'))b.addEventListener('click',()=>{product=b;color=b.dataset.color;$('[data-product-title]').textContent=b.dataset.title;$('[data-product-price]').textContent='€'+b.dataset.price;for(const c of all('[data-product-colour]'))c.setAttribute('aria-pressed',String(c.dataset.productColour===color));draw();dialog.showModal();});
     for(const b of all('[data-product-colour]'))b.addEventListener('click',()=>{color=b.dataset.productColour;for(const c of all('[data-product-colour]'))c.setAttribute('aria-pressed',String(c===b));draw();});
     for(const b of all('[data-product-filter]'))b.addEventListener('click',()=>{for(const c of all('[data-product-filter]'))c.setAttribute('aria-pressed',String(c===b));for(const p of all('[data-product]'))p.hidden=b.dataset.productFilter!=='all'&&(b.dataset.productFilter==='chair'?!['chair','stool'].includes(p.dataset.kind):p.dataset.kind!==b.dataset.productFilter);});
-    const renderBag=()=>{
+    const renderBag=(focusIndex=null)=>{
       const items=$('[data-bag-items]');items.replaceChildren();
       if(!bag.length)items.textContent=s.empty;
       for(const [index,item]of bag.entries()) {
-        const row=document.createElement('div');row.className='bag-row';const name=document.createElement('span');name.textContent=item.title;const price=document.createElement('span');price.textContent='€'+item.price;const remove=document.createElement('button');remove.textContent=s.remove;remove.addEventListener('click',()=>{bag.splice(index,1);renderBag();});row.append(name,price,remove);items.append(row);
+        const row=document.createElement('div');row.className='bag-row';
+        const name=document.createElement('span');name.textContent=item.title;
+        const finish=document.createElement('small');finish.className='bag-finish';finish.textContent=item.finish;name.append(finish);
+        const price=document.createElement('span');price.textContent='€'+item.price;
+        const remove=document.createElement('button');remove.type='button';remove.textContent=s.remove;
+        remove.setAttribute('aria-label',s.remove+' '+item.title+' — '+item.finish);
+        remove.addEventListener('click',()=>{bag.splice(index,1);renderBag(index);});
+        row.append(name,price,remove);items.append(row);
       }
       $('[data-bag-count]').textContent=bag.length;$('[data-bag-total]').textContent=bag.length?'€'+bag.reduce((sum,item)=>sum+item.price,0):'';$('[data-bag-checkout]').disabled=!bag.length;$('[data-bag-message]').textContent='';
+      if(focusIndex!==null) {
+        const removeButtons=[...items.querySelectorAll('button')];
+        (removeButtons[Math.min(focusIndex,removeButtons.length-1)]||$('.bag-dialog [data-close]')).focus({preventScroll:true});
+      }
     };
-    $('[data-add-bag]').addEventListener('click',()=>{bag.push({title:product.dataset.title,price:Number(product.dataset.price),color});renderBag();dialog.close();$('.bag-dialog').showModal();});
+    $('[data-add-bag]').addEventListener('click',()=>{const finish=all('[data-product-colour]').find(option=>option.dataset.productColour===color)?.getAttribute('aria-label')||'';bag.push({title:product.dataset.title,price:Number(product.dataset.price),color,finish});renderBag();dialog.close();$('.bag-dialog').showModal();});
     $('[data-bag]').addEventListener('click',()=>{renderBag();$('.bag-dialog').showModal();});
     $('[data-bag-checkout]').addEventListener('click',()=>{$('[data-bag-message]').textContent=s.checkout;});
   }

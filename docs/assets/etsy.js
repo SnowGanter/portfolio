@@ -1,4 +1,4 @@
-import {normalizeEtsyState,selectEtsyDesigns,etsyStateQuery} from './etsy-state.js?v=e51e94c44caf';
+import {normalizeEtsyState,selectEtsyDesigns,etsyStateQuery} from './etsy-state.js?v=140b3b60b112';
 
 const root = document.querySelector('[data-etsy-page]');
 if (root) {
@@ -104,7 +104,11 @@ if (root) {
     input.addEventListener('search',() => { if (!input.value) setState({q:''}); });
     sort.addEventListener('change',() => setState({sort:sort.value}));
     for (const filter of filters) filter.addEventListener('click',() => setState({category:filter.dataset.filter}));
-    for (const reset of root.querySelectorAll('[data-etsy-reset]')) reset.addEventListener('click',() => setState({category:'all',q:'',saved:false,sort:'portfolio'}));
+    for (const reset of root.querySelectorAll('[data-etsy-reset]')) reset.addEventListener('click',() => {
+      const restoreFocus=document.activeElement===reset;
+      setState({category:'all',q:'',saved:false,sort:'portfolio'});
+      if(restoreFocus)input.focus({preventScroll:true});
+    });
     window.addEventListener('popstate',() => { state=normalizeEtsyState(location.search);renderCatalogue(false); });
     renderCatalogue(false);
   } else {

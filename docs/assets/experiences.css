@@ -1,7 +1,7 @@
 :root { --x-paper:#f3f1e9; --x-ink:#222b2d; --x-muted:#647071; --x-line:#d8dad3; font-family:Inter,"Segoe UI",Arial,sans-serif; color:var(--x-ink); background:var(--x-paper); font-synthesis:none; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; scroll-padding-top:85px; }
-body { margin:0; min-width:0; background:var(--x-paper); }
+body { margin:0; min-width:0; background:var(--x-paper); color:var(--x-ink); }
 button,input,textarea { font:inherit; }
 button,a { -webkit-tap-highlight-color:transparent; }
 button { cursor:pointer; color:inherit; }
@@ -66,6 +66,7 @@ dialog::backdrop { background:#15202d77; backdrop-filter:blur(4px); }
 .bag-dialog h2 { font-weight:500; }
 .bag-row { display:grid; grid-template-columns:1fr auto auto; gap:15px; padding:16px 0; border-bottom:1px solid var(--x-line); font-size:12px; }
 .bag-row button { border:0; background:none; font-size:10px; text-decoration:underline; }
+.bag-finish { display:block; margin-top:5px; color:var(--x-muted); font-size:11px; }
 [data-bag-total] { text-align:right; font-weight:600; font-size:22px; }
 [data-bag-message] { font-size:12px; line-height:1.7; }
 .x-footer { display:flex; justify-content:space-between; align-items:center; gap:30px; padding:28px 50px; border-top:1px solid var(--x-line); }
