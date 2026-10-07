@@ -17,6 +17,44 @@
     window.addEventListener('hashchange', updateLanguageLinks);
     const header = document.querySelector('.site-header');
     if (header) {
+      const toggle = header.querySelector('[data-nav-toggle]');
+      const navigation = header.querySelector('.main-nav');
+      if (toggle && navigation) {
+        const compact = window.matchMedia('(max-width: 1000px)');
+        const label = toggle.querySelector('[data-nav-label]');
+        let open = false;
+        const renderMenu = () => {
+          navigation.hidden = compact.matches && !open;
+          toggle.hidden = !compact.matches;
+          toggle.setAttribute('aria-expanded', String(compact.matches && open));
+          toggle.setAttribute('aria-label', t(open ? 'Закрыть меню' : 'Открыть меню'));
+          // Keep the button width stable when expanded (especially in UK/RU).
+          // The icon and accessible name communicate the close action.
+          if (label) label.textContent = t('Меню');
+          header.classList.toggle('is-menu-open', compact.matches && open);
+        };
+        toggle.addEventListener('click', () => { open = !open; renderMenu(); });
+        header.addEventListener('keydown', (event) => {
+          if (event.key !== 'Escape' || !compact.matches || !open) return;
+          event.preventDefault();
+          open = false;
+          renderMenu();
+          toggle.focus({ preventScroll: true });
+        });
+        // Keep the complete static navigation when JavaScript is unavailable.
+        // Closing at a breakpoint must not leave focus in a hidden menu.
+        compact.addEventListener('change', () => {
+          const active = document.activeElement;
+          const restoreFocus = compact.matches && navigation.contains(active);
+          const restoreDesktopFocus = !compact.matches && active === toggle;
+          open = false;
+          renderMenu();
+          if (restoreFocus) toggle.focus({ preventScroll: true });
+          if (restoreDesktopFocus) (navigation.querySelector('[aria-current="page"]') || navigation.querySelector('a'))?.focus({ preventScroll: true });
+        });
+        header.classList.add('nav-ready');
+        renderMenu();
+      }
       const measure = () => document.documentElement.style.setProperty('--header-height', Math.ceil(header.getBoundingClientRect().height) + 'px');
       measure();
       if ('ResizeObserver' in window) new ResizeObserver(measure).observe(header);
