@@ -141,11 +141,11 @@
     const sectionLink = Array.from(document.querySelectorAll('.site-header .main-nav a')).find((link) => link.pathname.endsWith('/' + section + '/'));
     if (!sectionLink) return;
     const destination = new URL(sectionLink.pathname, location.origin);
-    if (section === "etsy" && ["all", "wallpaper", "painting", "sticker"].includes(category)) destination.searchParams.set("category", category);
+    if (section === "etsy" && ["all", "wallpaper", "painting", "sticker", "pattern"].includes(category)) destination.searchParams.set("category", category);
     for (const link of document.querySelectorAll("[data-case-back]")) link.href = destination.pathname + destination.search + destination.hash;
     for (const link of document.querySelectorAll("[data-case-next]")) {
       const next = new URL(link.href, location.href);
-      if (section === "etsy" && ["all", "wallpaper", "painting", "sticker"].includes(category)) next.searchParams.set("category", category);
+      if (section === "etsy" && ["all", "wallpaper", "painting", "sticker", "pattern"].includes(category)) next.searchParams.set("category", category);
       link.href = next.pathname + next.search;
     }
   }
