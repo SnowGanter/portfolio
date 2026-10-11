@@ -2,6 +2,20 @@
   'use strict';
   const root=document.querySelector('[data-amazon-page]');
   if(!root)return;
+  // The mobile hero uses a selected product photograph, not a shrunken desktop banner.
+  // Keep the native full-view link and the enhanced gallery aligned with the visible source.
+  const mobileArtQuery=window.matchMedia('(max-width:700px)');
+  function updateResponsiveArt(){
+    for(const link of root.querySelectorAll('[data-amazon-responsive-art]')){
+      const mobile=mobileArtQuery.matches;
+      link.href=mobile?link.dataset.mobileHref:link.dataset.desktopHref;
+      link.dataset.lightboxImage=link.href;
+      link.dataset.lightboxTitle=mobile?link.dataset.mobileTitle:link.dataset.desktopTitle;
+      link.querySelector('img').alt=link.dataset.lightboxTitle;
+    }
+  }
+  updateResponsiveArt();
+  mobileArtQuery.addEventListener('change',updateResponsiveArt);
   const gallery=root.querySelector('[data-amazon-gallery]');
   const frames=[...root.querySelectorAll('[data-amazon-frame]')];
   const thumbs=[...root.querySelectorAll('[data-amazon-thumb]')];
