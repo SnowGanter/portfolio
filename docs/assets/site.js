@@ -141,11 +141,11 @@
     const sectionLink = Array.from(document.querySelectorAll('.site-header .main-nav a')).find((link) => link.pathname.endsWith('/' + section + '/'));
     if (!sectionLink) return;
     const destination = new URL(sectionLink.pathname, location.origin);
-    if (section === "etsy" && ["all", "wallpaper", "painting"].includes(category)) destination.searchParams.set("category", category);
+    if (section === "etsy" && ["all", "wallpaper", "painting", "sticker"].includes(category)) destination.searchParams.set("category", category);
     for (const link of document.querySelectorAll("[data-case-back]")) link.href = destination.pathname + destination.search + destination.hash;
     for (const link of document.querySelectorAll("[data-case-next]")) {
       const next = new URL(link.href, location.href);
-      if (section === "etsy" && ["all", "wallpaper", "painting"].includes(category)) next.searchParams.set("category", category);
+      if (section === "etsy" && ["all", "wallpaper", "painting", "sticker"].includes(category)) next.searchParams.set("category", category);
       link.href = next.pathname + next.search;
     }
   }
@@ -309,15 +309,18 @@
       const focusedControl = document.activeElement;
       const actual = Math.abs(scale - 1) < 0.015;
       const realDesign = currentFrame()?.dataset.realOriginal === "true";
+      const webExport = currentFrame()?.dataset.webExport === "true";
       readout.value = Math.abs(scale - fitScale) < Math.max(0.00001, fitScale * 0.015)
         ? "Fit" : actual ? (realDesign ? "1:1" : t("1:1 файл")) :
           Math.round(scale / Math.max(fitScale, 0.001) * 100) + t("% от Fit");
-      oneButton.disabled = !realDesign;
+      oneButton.disabled = !realDesign && !webExport;
       fitButton.disabled = Math.abs(scale - fitScale) < fitScale * .001;
       dialog.querySelector("[data-minus]").disabled = scale <= minimumScale * 1.001;
       dialog.querySelector("[data-plus]").disabled = scale >= maximumScale * .999;
       if (zoomButtons.includes(focusedControl) && focusedControl.disabled) stage.focus({ preventScroll: true });
-      oneButton.title = t(realDesign
+      oneButton.title = t(webExport
+        ? "Один пиксель веб-версии соответствует одному CSS-пикселю"
+        : realDesign
         ? "Один пиксель оригинала соответствует одному CSS-пикселю"
         : "Для кадра нет подтверждённого оригинала дизайна высокого разрешения");
     }
@@ -456,7 +459,7 @@
     nextButton.addEventListener("click", () => setFrame(activeIndex + 1));
     fitButton.addEventListener("click", fitImage);
     oneButton.addEventListener("click", () => {
-      if (activeFrame?.dataset.realOriginal === "true") zoomTo(1);
+      if (activeFrame?.dataset.realOriginal === "true" || activeFrame?.dataset.webExport === "true") zoomTo(1);
     });
     dialog.querySelector("[data-minus]").addEventListener("click", () => zoomTo(scale / 1.22));
     dialog.querySelector("[data-plus]").addEventListener("click", () => zoomTo(scale * 1.22));
@@ -479,7 +482,7 @@
       if (event.key === "ArrowRight") { event.preventDefault(); setFrame(activeIndex + 1); }
       else if (event.key === "ArrowLeft") { event.preventDefault(); setFrame(activeIndex - 1); }
       else if (event.key === "0") { event.preventDefault(); fitImage(); }
-      else if (event.key === "1" && activeFrame?.dataset.realOriginal === "true") { event.preventDefault(); zoomTo(1); }
+      else if (event.key === "1" && (activeFrame?.dataset.realOriginal === "true" || activeFrame?.dataset.webExport === "true")) { event.preventDefault(); zoomTo(1); }
       else if (event.key === "+" || event.key === "=") { event.preventDefault(); zoomTo(scale * 1.22); }
       else if (event.key === "-") { event.preventDefault(); zoomTo(scale / 1.22); }
     });

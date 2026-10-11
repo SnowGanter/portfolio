@@ -262,3 +262,6 @@
   .et-card-media, .et-card-media img, .et-favorite { transition: none; }
   .et-card-link:hover img, .et-favorite:hover { transform: none; }
 }
+.et-card[data-category="sticker"] .et-card-media{background:#edf1f8;}
+.et-card[data-category="sticker"] .et-card-media img{object-fit:contain;padding:16px;}
+.etsy-context:has([data-kind="design-export"]) .et-stage{background:#f2f4f8;}

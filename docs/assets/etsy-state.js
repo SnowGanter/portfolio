@@ -2,7 +2,7 @@
 export function normalizeEtsyState(input) {
   const params = input instanceof URLSearchParams ? input : new URLSearchParams(input);
   return {
-    category: ['wallpaper','painting'].includes(params.get('category')) ? params.get('category') : 'all',
+    category: ['wallpaper','painting','sticker'].includes(params.get('category')) ? params.get('category') : 'all',
     q: (params.get('q') || '').trim().slice(0,120),
     sort: ['az','za'].includes(params.get('sort')) ? params.get('sort') : 'portfolio',
     saved: params.get('saved') === '1',
