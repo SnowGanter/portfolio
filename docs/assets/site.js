@@ -590,9 +590,49 @@
     });
   }
 
+  // Footer contacts: copying the address is the reliable path when a computer
+  // has no mail app registered for mailto: links. The mailto still opens normally.
+  function setupContacts() {
+    const status = document.querySelector('[data-contact-status]');
+    if (!status) return;
+    let timer = 0;
+    const say = (message) => {
+      status.textContent = message;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => { status.textContent = ''; }, 6000);
+    };
+    const copy = async (value) => {
+      try {
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch {
+        const field = document.createElement('textarea');
+        field.value = value;
+        field.setAttribute('readonly', '');
+        field.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+        document.body.append(field);
+        field.select();
+        let done = false;
+        try { done = document.execCommand('copy'); } catch {}
+        field.remove();
+        return done;
+      }
+    };
+    document.addEventListener('click', async (event) => {
+      const target = event.target.closest('[data-copy-value]');
+      if (!target) return;
+      const isLink = target.tagName === 'A';
+      if (!isLink) event.preventDefault();
+      const copied = await copy(target.dataset.copyValue);
+      if (!copied) return;
+      say(isLink ? t('Адрес скопирован. Если почтовая программа не открылась, вставьте его в письмо.') : t('Адрес почты скопирован'));
+    });
+  }
+
   setupNavigation();
   setupFilters();
   setupCaseReturn();
   setupVideos();
   setupViewer();
+  setupContacts();
 })();

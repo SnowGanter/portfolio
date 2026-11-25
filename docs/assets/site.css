@@ -1,4 +1,4 @@
-@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=a1d1ecf6b35a') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=43e18e0e9d35') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
 :root {
   color-scheme: light;
   --paper: #f7f8fa;
@@ -660,4 +660,26 @@ button:focus-visible, a:focus-visible, summary:focus-visible, [tabindex]:focus-v
   .site-header .brand { font-size: 12px; }
   .site-header .nav-toggle { min-width: 60px; padding-inline: 5px; }
   .site-header .header-contact { font-size: 12px; }
+}
+
+/* Footer contacts: email (copy / Gmail), phone and messenger icons. */
+.footer-contacts { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 14px; min-width: 0; }
+.contact-email-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.contact-email, .contact-phone { color: var(--ink); font-weight: 650; white-space: nowrap; }
+.contact-email:hover, .contact-phone:hover { color: var(--accent); }
+.contact-mini { display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--surface); font: inherit; font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer; }
+.contact-mini:hover { border-color: var(--accent); color: var(--accent); }
+.contact-icons { display: inline-flex; gap: 8px; }
+.contact-icon { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #fff; transition: transform .18s ease, box-shadow .18s ease; }
+.contact-icon svg { width: 21px; height: 21px; }
+.contact-icon--telegram { background: #229ed9; }
+.contact-icon--viber { background: #7360f2; }
+.contact-icon--whatsapp { background: #25d366; }
+.contact-icon:hover { transform: translateY(-2px); box-shadow: 0 6px 16px #171a2026; }
+.contact-status { flex-basis: 100%; min-height: 0; color: var(--accent); font-size: 12px; text-align: center; }
+.contact-status:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .contact-icon { transition: none; } .contact-icon:hover { transform: none; } }
+@media (max-width: 720px) {
+  .footer-contacts { order: 3; width: 100%; justify-content: flex-start; }
+  .contact-icon { width: 42px; height: 42px; }
 }
