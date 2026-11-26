@@ -466,7 +466,7 @@
         const raw = [`${p}_7f3a.png`, `${p}_09bc.png`, `${p}_c41d.png`];
         const files = sides.map(([side], i) => file(art[side], raw[i]));
         visual.replaceChildren(el('div', { class: 'pp-row' }, folder('D:/загрузки'), el('div', { class: 'pp-files' }, files)));
-        write(`[${time()}] ренейм.jsx · D:/загрузки`);
+        write(`[${time()}] rename.jsx · D:/загрузки`);
         await wait(1100);
         files.forEach((node) => node.classList.add('is-shuffling'));
         await wait(700);
@@ -488,7 +488,7 @@
         const files = sides.map(([side, s]) => file(art[side], `${p}_${s}.png`));
         const tray = el('div', { class: 'pp-files pp-files--tray' }, files);
         visual.replaceChildren(el('div', { class: 'pp-sort' }, el('div', { class: 'pp-sort-col' }, source, tray), el('span', { class: 'pp-arrow', 'aria-hidden': 'true', text: '→' }), el('div', { class: 'pp-sort-col' }, target, el('div', { class: 'pp-files pp-files--target' }))));
-        write(`[${time()}] сортировка.jsx · F:/work/work2/topaz`);
+        write(`[${time()}] sort.jsx · F:/work/work2/topaz`);
         const dest = $(visual, '.pp-files--target');
         await wait(700);
         for (const node of files) { node.classList.add('is-moving'); await wait(420); dest.append(node); node.classList.remove('is-moving'); }

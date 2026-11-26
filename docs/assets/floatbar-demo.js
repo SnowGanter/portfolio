@@ -379,8 +379,8 @@
   preset.addEventListener('change', () => { if (D.presets[preset.value]) enhancePrompt.value = D.presets[preset.value]; });
   enhancePrompt.addEventListener('input', () => { if (D.presets[preset.value] && enhancePrompt.value.trim() !== D.presets[preset.value].trim()) preset.value = 'custom'; });
   $('rmbgQwenPrompt').value = D.removeBackgroundPrompt;
-  $('promptInput').value = 'Japanese ink painting on warm rice paper, a crane by misty water, large empty space, one vermilion accent';
-  $('img2imgPrompt').value = 'Same ink study, morning haze, a second crane in flight, keep the paper texture';
+  $('promptInput').value = '3D wall decal: Spider-Man climbing out of a broken brick wall, Manhattan street and the Empire State Building behind, photorealistic, transparent outside';
+  $('img2imgPrompt').value = 'Same breach and city, the hero leans out with one hand over the edge of the bricks';
   $('kreaSeed').value = '104729'; $('img2imgSeed').value = '104729'; $('variationSeed').value = '20261118'; $('mockupAiSeed').value = '512';
 
   // ---------------------------------------------------------------- Krea 2 LoRA (list from the app)
