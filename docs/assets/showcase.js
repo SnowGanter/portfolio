@@ -222,9 +222,12 @@
     const agentLine = (step, done) => el('div', { class: 'sa-msg sa-msg--agent' }, el('p', { text: step.say }),
       el('span', { class: 'sa-tool' + (done ? ' is-done' : '') }, el('i', { 'aria-hidden': 'true' }), step.tool));
     const scrollThread = () => { thread.scrollTop = thread.scrollHeight; };
+    // The finished set of 100 on the owner's Etsy shop.
+    const etsyLink = (mode, animate) => el('a', { class: 'sa-link' + (animate ? ' is-in' : ''), href: mode.link, target: '_blank', rel: 'noopener', text: labels.etsyLink + ' ↗' });
     function renderFinal(index) {
       const mode = modes[index];
       thread.replaceChildren(el('div', { class: 'sa-msg sa-msg--user', text: mode.user }), ...mode.steps.map((step) => agentLine(step, true)));
+      if (mode.link) thread.append(etsyLink(mode));
       const token = { cancelled: false, wakers: new Set() };
       showVisual(stage, mode.steps[mode.steps.length - 1].visual, runner, token);
       state.textContent = labels.done;
@@ -253,6 +256,7 @@
         await runner.sleep(dwell, token);
         $(line, '.sa-tool').classList.add('is-done');
       }
+      if (mode.link) { thread.append(etsyLink(mode, true)); scrollThread(); }
       state.textContent = labels.done;
       state.classList.remove('is-busy');
       queue[index]?.classList.add('is-done');

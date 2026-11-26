@@ -396,3 +396,7 @@
   .pp-mock .pp-so { display: none; }
   .pp-mock .pp-mock-result { opacity: 1; filter: none; }
 }
+/* Agent: link to the finished set on Etsy */
+.sa-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 2px; padding: 8px 14px; border: 1px solid #f1641e; border-radius: 999px; background: #f1641e1f; color: #ffb68f; font-size: 13px; font-weight: 600; text-decoration: none; }
+.sa-link:hover, .sa-link:focus-visible { background: #f1641e; color: #fff; outline: none; }
+.sa-link.is-in { animation: sv-fade .5s ease both; }
