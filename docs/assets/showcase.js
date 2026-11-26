@@ -672,9 +672,9 @@
     let userPlay = !reduced.matches;
     let held = false;                       // stage 2 holds the depth clip on the anchored frame
 
-    // The owner asked for a quiet default: the finished spot starts at 20% volume.
-    final.volume = 0.2;
-    final.addEventListener('loadedmetadata', () => { if (!final.dataset.touched) final.volume = 0.2; }, { once: true });
+    // The owner asked for a quiet default: the finished spot starts at 10% volume.
+    final.volume = 0.1;
+    final.addEventListener('loadedmetadata', () => { if (!final.dataset.touched) final.volume = 0.1; }, { once: true });
     final.addEventListener('volumechange', () => { final.dataset.touched = '1'; });
     // The demo clips rest while the finished spot plays, and continue after it stops.
     for (const type of ['play', 'pause', 'ended']) final.addEventListener(type, () => syncPlayback());

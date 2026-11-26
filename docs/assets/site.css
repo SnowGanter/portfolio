@@ -1,4 +1,4 @@
-@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=5fa9c136ee52') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Rubik Black'; src: url('./fonts/Rubik-Black.ttf?v=6a839a7ef9e2') format('truetype'); font-weight: 900; font-style: normal; font-display: swap; }
 :root {
   color-scheme: light;
   --paper: #f7f8fa;
