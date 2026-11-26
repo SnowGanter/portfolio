@@ -106,16 +106,28 @@
         node = el('figure', { class: 'sv-image' + (v.narrow ? ' sv-image--narrow' : '') }, img(v.src), v.caption ? el('figcaption', { text: v.caption }) : null);
         break;
       case 'grid': {
-        node = el('div', { class: 'sv-grid', style: '--ratio:' + (v.ratio || '1') });
+        const grid = el('div', { class: 'sv-grid' + (v.images.length === 4 ? ' sv-grid--four' : ''), style: '--ratio:' + (v.ratio || '1') });
         const slots = v.images.map(() => el('span', { class: 'is-waiting' }));
-        node.append(...slots);
+        grid.append(...slots);
+        node = el('figure', { class: 'sv-grid-wrap' }, grid, v.caption ? el('figcaption', { text: v.caption }) : null);
         stage.replaceChildren(node);
         for (const [index, slot] of slots.entries()) {
           await wait(index ? 420 : 200);
           slot.classList.remove('is-waiting');
           slot.append(img(v.images[index]));
         }
+        if (v.pick != null) { await wait(600); slots[v.pick]?.classList.add('is-pick'); return 1900; }
         return 1200;
+      }
+      case 'marks': {
+        // Review marks drawn over the artwork, one by one, like the agent's review screen.
+        const pct = (n) => (n * 100).toFixed(2) + '%';
+        const marks = v.boxes.map((b) => el('span', { class: 'sv-mark', style: `--x:${pct(b.x)};--y:${pct(b.y)};--w:${pct(b.w)};--h:${pct(b.h)};--c:${b.color}` },
+          el('b', { text: b.label }), b.text ? el('em', { text: b.text }) : null));
+        node = el('figure', { class: 'sv-marks' }, el('div', { class: 'sv-marks-frame' }, img(v.src), ...marks));
+        stage.replaceChildren(node);
+        for (const mark of marks) { await wait(650); mark.classList.add('is-in'); }
+        return 2300;
       }
       case 'cards': {
         node = el('div', { class: 'sv-cards' });
@@ -128,7 +140,7 @@
         break;
       case 'compare': {
         const before = el('div', { class: 'sv-compare-before' }, img(v.before));
-        node = el('div', { class: 'sv-compare' + (v.zoom ? ' sv-compare--zoom' : ''), style: '--split:50%' }, img(v.after), before,
+        node = el('div', { class: 'sv-compare' + (v.zoom ? ' sv-compare--zoom' : ''), style: '--split:50%' + (v.ratio ? ';--ratio:' + v.ratio : '') }, img(v.after), before,
           el('i', { class: 'sv-compare-line', 'aria-hidden': 'true' }),
           el('span', { class: 'sv-compare-label sv-compare-label--before', text: v.labels[0] }), el('span', { class: 'sv-compare-label sv-compare-label--after', text: v.labels[1] }));
         stage.replaceChildren(node);
@@ -199,7 +211,7 @@
     const runner = new Runner(root);
     let current = 0;
     let chosen = false;
-    const comfyTool = /series_run|series_verdict|pattern_start|take_found|pattern_build|upscale_trial|upscale_run|series_mockups/;
+    const comfyTool = /series_run|series_verdict|series_regen|pattern_start|take_found|pattern_build|upscale_trial|upscale_run|series_mockups/;
     const setGpu = (tool) => {
       const comfy = comfyTool.test(tool);
       const label = comfy ? 'GPU · ComfyUI' : 'GPU · Qwen3.8-Flash-Next';
@@ -282,6 +294,8 @@
     const badge = $(root, '[data-vz-badge]');
     const palette = $(root, '[data-vz-palette]');
     const stats = $(root, '[data-vz-stats]');
+    const download = $(root, '[data-vz-download]');
+    const downloadMeta = $(root, '[data-vz-download-meta]');
     const zoomRaster = $(root, '[data-vz-zoom-raster]');
     const zoomVector = $(root, '[data-vz-zoom-vector]');
     const stageButtons = $$(root, '[data-vz-stage]');
@@ -375,6 +389,11 @@
         }
       }
       if (index === 5) paintZoom(ex);
+      // The finished SVG can be downloaded at the end of the run (the node's own output file).
+      download.hidden = index !== 5;
+      download.href = ex.svg;
+      download.setAttribute('download', ex.file);
+      downloadMeta.textContent = downloadMeta.textContent.replace(/^[^·]+·[^·]+·/, `${ex.file} · ${Math.round(ex.svgBytes / 1024)} KB ·`);
     }
     const durations = [1700, 2600, 2600, 4300, 3600, 5200];
     async function cycle(token, from = 0) {
@@ -416,172 +435,6 @@
     else render(5, false).catch(() => {});
   }
 
-  // ---------------------------------------------------------------- ComfyFloatBar replica
-  function initFloatbar(root) {
-    const actions = data(root, '[data-cfb-actions]');
-    const labels = JSON.parse(root.dataset.labels);
-    const panel = $(root, '[data-cfb]');
-    const canvas = $(root, '[data-ps-canvas]');
-    const list = $(root, '[data-ps-layers]');
-    const tab = $(root, '[data-ps-tab]');
-    const status = $(root, '[data-ps-status]');
-    const empty = $(root, '[data-ps-empty]');
-    const ants = $(root, '[data-ps-ants]');
-    const model = $(panel, '[data-cfb-model]');
-    const dot = $(panel, '[data-cfb-dot]');
-    const progress = $(panel, '[data-cfb-progress]');
-    const progressText = $(panel, '[data-cfb-progress-text]');
-    const bar = $(panel, '[data-cfb-bar]');
-    const toast = $(panel, '[data-cfb-toast]');
-    let layers = [];
-    let docKey = '';
-    let busy = null;
-    let toastTimer = 0;
-    let uid = 0;
-
-    const say = (text) => {
-      toast.textContent = text;
-      toast.classList.add('is-on');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('is-on'), 3600);
-    };
-    // Panel behaviour: sections, tabs, sliders, toggles.
-    $$(panel, '.cfb-sec-head').forEach((head) => head.addEventListener('click', () => {
-      const section = head.parentElement;
-      const open = !section.classList.contains('is-open');
-      section.classList.toggle('is-open', open);
-      head.setAttribute('aria-expanded', String(open));
-      head.nextElementSibling.hidden = !open;
-    }));
-    $$(panel, '[data-cfb-tabs]').forEach((group) => group.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-cfb-tab]');
-      if (!button) return;
-      const name = group.dataset.cfbTabs;
-      $$(group, '[data-cfb-tab]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
-      $$(group.parentElement, '[data-cfb-pane]').forEach((pane) => { if (pane.dataset.cfbPane.startsWith(name + ':')) pane.hidden = pane.dataset.cfbPane !== name + ':' + button.dataset.cfbTab; });
-      if (name === 'aplus') {
-        const premium = button.dataset.cfbTab === 'premium';
-        const run = $(group.parentElement, '[data-cfb-run="aplus"]');
-        if (run) run.textContent = premium ? 'Создать Premium A+ комплект' : 'Создать Basic A+ комплект';
-        const size = $(group.parentElement, '[data-cfb-aplus-size]');
-        if (size) size.selectedIndex = premium ? 1 : 0;
-      }
-    }));
-    $$(panel, 'input[type="range"]').forEach((range) => range.addEventListener('input', () => {
-      range.nextElementSibling.textContent = range.value + (range.dataset.unit || '');
-    }));
-    $$(panel, '[data-cfb-dir]').forEach((button) => button.addEventListener('click', () => {
-      const on = button.getAttribute('aria-pressed') !== 'true';
-      button.setAttribute('aria-pressed', String(on));
-      $(button, 'small').textContent = (on ? '1024' : '0') + ' px';
-    }));
-    $$(panel, '[data-cfb-select]').forEach((button) => button.addEventListener('click', () => {
-      ants.hidden = false;
-      ants.classList.remove('is-on');
-      void ants.offsetWidth;
-      ants.classList.add('is-on');
-      setTimeout(() => { ants.hidden = true; }, 1600);
-      const drop = $(button.closest('.cfb-pane, .cfb-sec-body'), '[data-cfb-drop]');
-      if (drop) drop.textContent = 'Выделение из Photoshop · 1000 × 1000 px';
-      say('Выделение отправлено в панель');
-    }));
-    $(panel, '[data-cfb-free]').addEventListener('click', () => { model.textContent = 'Модель: —'; dot.className = 'cfb-dot is-idle'; say('Память ComfyUI освобождена'); });
-    $(panel, '[data-cfb-cancel]').addEventListener('click', () => { if (busy) busy.cancelled = true; });
-
-    // Photoshop document: a white background plus result layers.
-    function renderLayers() {
-      $$(canvas, '.ps-layer:not(.ps-layer--bg)').forEach((node) => node.remove());
-      const bg = $(canvas, '.ps-layer--bg');
-      bg.hidden = !layers.find((layer) => layer.id === 'bg').visible;
-      for (const layer of layers.filter((item) => item.id !== 'bg')) {
-        const node = el('div', { class: 'ps-layer' + (layer.reveal ? ' is-revealing' : '') + (layer.row ? ' ps-layer--row' : ''), 'data-layer-id': layer.id });
-        if (layer.row) node.append(...layer.row.map((src) => img(src)));
-        else node.append(img(layer.src));
-        node.hidden = !layer.visible;
-        canvas.append(node);
-        // Force a style flush so the clip-path transition starts from the hidden state.
-        if (layer.reveal) { layer.reveal = false; void node.offsetWidth; node.classList.add('is-shown'); }
-      }
-      empty.hidden = layers.length > 1;
-      list.replaceChildren(...[...layers].reverse().map((layer, index) => {
-        const thumb = layer.id === 'bg' ? el('span', { class: 'ps-thumb ps-thumb--white' })
-          : el('span', { class: 'ps-thumb', style: `background-image:url("${layer.row ? layer.row[0] : layer.src}")` });
-        const eye = el('button', { type: 'button', class: 'ps-eye', 'aria-pressed': String(layer.visible), 'aria-label': labels.toggle, 'data-ps-eye': layer.id, text: '👁' });
-        return el('li', { class: index === 0 ? 'is-active' : '', 'data-layer-li': layer.id }, eye, thumb, el('span', { text: layer.name }));
-      }));
-    }
-    list.addEventListener('click', (event) => {
-      const eye = event.target.closest('[data-ps-eye]');
-      if (!eye) return;
-      const layer = layers.find((item) => item.id === eye.dataset.psEye);
-      layer.visible = !layer.visible;
-      renderLayers();
-    });
-    function resetDoc(name = 'portfolio-demo.psd') {
-      layers = [{ id: 'bg', name: labels.background, visible: true }];
-      docKey = '';
-      tab.textContent = name + ' @ 50% (RGB/8)';
-      status.textContent = '50% · RGB/8';
-      renderLayers();
-    }
-    function addLayer(layer) {
-      if (layer.hideBelow) layers.forEach((item) => { item.visible = false; });
-      layers.push({ id: 'l' + (++uid), visible: true, reveal: !reduced.matches, ...layer });
-      renderLayers();
-    }
-    $(root, '[data-ps-reset]').addEventListener('click', () => { if (!busy) resetDoc(); });
-
-    const wait = (ms, token) => new Promise((resolve, reject) => setTimeout(() => token.cancelled ? reject(CANCEL) : resolve(), reduced.matches ? Math.min(ms, 120) : ms));
-    async function run(key) {
-      if (busy) return;
-      const action = actions[key];
-      if (!action) return;
-      if (action.requires && docKey !== action.requires) await run(action.requires);
-      const token = busy = { cancelled: false };
-      // On narrow screens the panel sits below the canvas: bring the result into view.
-      if (getComputedStyle(panel).position === 'static') $(root, '.ps-window').scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'start' });
-      model.textContent = 'Модель: ' + action.model;
-      dot.className = 'cfb-dot is-busy';
-      progress.hidden = false;
-      $$(panel, '[data-cfb-run]').forEach((button) => { button.dataset.wasDisabled = button.disabled ? '1' : ''; button.disabled = true; });
-      try {
-        if (!action.requires) {
-          resetDoc(action.doc);
-          if (action.before) addLayer({ name: 'Слой 0', src: action.before });
-        } else tab.textContent = action.doc + ' @ 50% (RGB/8)';
-        const steps = action.steps;
-        for (const [index, label] of steps.entries()) {
-          progressText.textContent = label;
-          bar.style.width = ((index + 1) / steps.length * 100) + '%';
-          await wait(index === steps.length - 1 ? 650 : 1050, token);
-          if (action.sequence && index < action.sequence.length) { const item = action.sequence[index]; addLayer({ name: item.layer, src: item.src, hideBelow: item.hideBelow }); }
-        }
-        if (action.after) addLayer({ name: action.layer, src: action.after, hideBelow: action.hideBelow });
-        if (action.row) addLayer({ name: action.layer, row: action.row, hideBelow: true });
-        docKey = key;
-        dot.className = 'cfb-dot is-ready';
-        const last = layers[layers.length - 1];
-        say('Готово: слой «' + last.name + '» вставлен в Photoshop');
-        if (action.next) $(panel, `[data-cfb-run="${action.next}"]`)?.classList.add('is-next');
-        else $$(panel, '.is-next').forEach((node) => node.classList.remove('is-next'));
-      } catch (error) {
-        if (error !== CANCEL) throw error;
-        dot.className = 'cfb-dot is-idle';
-        say('Отменено');
-      } finally {
-        progress.hidden = true;
-        bar.style.width = '0';
-        busy = null;
-        $$(panel, '[data-cfb-run]').forEach((button) => { button.disabled = button.dataset.wasDisabled === '1'; });
-      }
-    }
-    panel.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-cfb-run]');
-      if (button && !button.disabled) run(button.dataset.cfbRun);
-    });
-    resetDoc();
-  }
-
   // ---------------------------------------------------------------- Photoshop pipeline
   function initPipeline(section) {
     const root = $(section, '[data-pipeline]');
@@ -603,33 +456,32 @@
     const folder = (name) => el('div', { class: 'pp-folder' }, el('span', { class: 'pp-folder-icon', 'aria-hidden': 'true' }), el('code', { text: name }));
     const sides = [['left', 'l'], ['center', 'c'], ['right', 'r']];
 
+    const p = info.design;
     const stages = {
       async rename(token, wait) {
-        const raw = ['p71_7f3a.png', 'p71_09bc.png', 'p71_c41d.png'];
+        const raw = [`${p}_7f3a.png`, `${p}_09bc.png`, `${p}_c41d.png`];
         const files = sides.map(([side], i) => file(art[side], raw[i]));
         visual.replaceChildren(el('div', { class: 'pp-row' }, folder('D:/загрузки'), el('div', { class: 'pp-files' }, files)));
         write(`[${time()}] ренейм.jsx · D:/загрузки`);
         await wait(1100);
-        const suffixes = ['_r', '_c', '_l'];
-        files.forEach((node, i) => node.classList.add('is-shuffling'));
+        files.forEach((node) => node.classList.add('is-shuffling'));
         await wait(700);
-        sides.forEach(([, s], i) => { $(files[i], 'code').textContent = `p71_${s}.png`; files[i].classList.remove('is-shuffling'); files[i].classList.add('is-renamed'); });
+        sides.forEach(([, s], i) => { $(files[i], 'code').textContent = `${p}_${s}.png`; files[i].classList.remove('is-shuffling'); files[i].classList.add('is-renamed'); });
         write('Готово.\nПереименовано: 3\nПропущено: 0');
-        void suffixes;
         return 1600;
       },
       async topaz(token, wait) {
-        const files = sides.map(([side, s]) => file(art[side], `p71_${s}.png`, 'is-upscaling'));
+        const files = sides.map(([side, s]) => file(art[side], `${p}_${s}.png`, 'is-upscaling'));
         visual.replaceChildren(el('div', { class: 'pp-row' }, el('div', { class: 'pp-files' }, files), el('span', { class: 'pp-arrow', 'aria-hidden': 'true', text: '→' }), folder('F:/work/work2/topaz')));
         write(`[${time()}] Topaz Gigapixel · ×4 · ${labels.external}`);
         for (const node of files) { await wait(380); node.classList.add('is-up'); }
-        write('→ topaz/p71_l.png, p71_c.png, p71_r.png');
+        write(`→ topaz/${p}_l.png, ${p}_c.png, ${p}_r.png`);
         return 1500;
       },
       async sort(token, wait) {
         const source = folder('topaz/');
-        const target = folder('p71/');
-        const files = sides.map(([side, s]) => file(art[side], `p71_${s}.png`));
+        const target = folder(p + '/');
+        const files = sides.map(([side, s]) => file(art[side], `${p}_${s}.png`));
         const tray = el('div', { class: 'pp-files pp-files--tray' }, files);
         visual.replaceChildren(el('div', { class: 'pp-sort' }, el('div', { class: 'pp-sort-col' }, source, tray), el('span', { class: 'pp-arrow', 'aria-hidden': 'true', text: '→' }), el('div', { class: 'pp-sort-col' }, target, el('div', { class: 'pp-files pp-files--target' }))));
         write(`[${time()}] сортировка.jsx · F:/work/work2/topaz`);
@@ -639,42 +491,64 @@
         write('Создано папок: 1\nПеренесено файлов: 3\nПропущено: 0\nОшибок: 0');
         return 1600;
       },
+      // The parts fly into every template in turn; each real mockup develops in the large view and
+      // takes its place in the strip, as full_v4_fast_console.jsx exports it: first the triptych
+      // templates, then every single-picture template with each of the three paintings.
       async mockups(token, wait) {
-        const frames = [[0.1655, 0.138, 0.1964, 0.31], [0.398, 0.138, 0.2018, 0.31], [0.636, 0.138, 0.1964, 0.31]];
-        const result = el('div', { class: 'pp-mock' }, img(art.mockup, 'pp-mock-result'),
-          ...frames.map(([x, y, w, h], i) => el('span', { class: 'pp-so', style: `left:${x * 100}%;top:${y * 100}%;width:${w * 100}%;height:${h * 100}%` }, img(art[sides[i][0]]))));
-        const counter = el('strong', { text: '0/20' });
-        const thumbs = el('div', { class: 'pp-templates' }, Array.from({ length: 20 }, (_, i) => el('span', {}, img(info.templates[i % info.templates.length]))));
-        visual.replaceChildren(el('div', { class: 'pp-mockups' }, result, el('div', { class: 'pp-mock-side' }, el('p', { class: 'pp-counter' }, 'Mockup triple ', counter), thumbs)));
+        const groups = [{ key: 'triple', label: labels.triptychs, items: info.mockups }, { key: 'single', label: labels.singles, items: info.singles || [] }].filter((g) => g.items.length);
+        const total = groups.reduce((n, g) => n + g.items.length, 0);
+        const stage = el('div', { class: 'pp-insert' });
+        const parts = el('div', { class: 'pp-insert-parts' }, sides.map(([side, s]) => el('span', { 'data-side': s }, img(art[side]))));
+        const shot = img(groups[0].items[0].src, 'pp-insert-shot');
+        const caption = el('p', { class: 'pp-insert-caption' }, el('code', { text: '' }), el('span', { text: '' }));
+        stage.append(shot, parts);
+        const counter = el('strong', { text: `0/${total}` });
+        const strips = groups.map((g) => el('ol', { class: 'pp-strip pp-strip--' + g.key }, g.items.map((item) => el('li', { title: item.file }, img(item.src), el('small', { text: item.badge })))));
+        const side = el('div', { class: 'pp-strip-wrap' }, el('p', { class: 'pp-counter' }, labels.mockups + ' ', counter),
+          ...groups.map((g, i) => [el('p', { class: 'pp-strip-title', text: g.label }), strips[i]]).flat());
+        visual.replaceChildren(el('div', { class: 'pp-mockups2' }, el('div', { class: 'pp-insert-wrap' }, stage, caption), side));
         write(`[${time()}] Подготовка Photoshop...`);
-        write(`[${time()}] Найдено папок: 1`);
-        write(`[${time()}] Папок для обработки: 1`);
-        write(`[${time()}] Папка 1/1: p71`);
+        write(`[${time()}] Папка 1/1: ${p}`);
         write(`[${time()}]   Найдено изображений: 3`);
-        await wait(500);
-        result.classList.add('is-placing');
-        await wait(1500);
-        result.classList.add('is-placed');
-        const cells = $$(thumbs, 'span');
-        for (let i = 0; i < 20; i++) {
-          cells[i].classList.add('is-done');
-          counter.textContent = `${i + 1}/20`;
-          if (i < 3 || i === 19) write(`[${time()}]   Mockup triple ${i + 1}/20`);
-          else if (i === 3) write('  …');
-          await wait(instant() ? 0 : 150);
+        let done = 0;
+        for (const [g, group] of groups.entries()) {
+          const cells = $$(strips[g], 'li');
+          const fast = group.key === 'single';
+          if (fast) write(`[${time()}] Одиночные шаблоны: ${p}_l / ${p}_c / ${p}_r`);
+          let lastTemplate = '';
+          for (const [i, item] of group.items.entries()) {
+            stage.classList.remove('is-placed');
+            parts.querySelectorAll('span').forEach((span) => span.classList.toggle('is-skip', !item.panels.includes(span.dataset.side)));
+            $(caption, 'code').textContent = item.template + '.psd';
+            $(caption, 'span').textContent = ' → ' + item.file;
+            if (item.template !== lastTemplate) write(`[${time()}]   ${fast ? 'Mockup single' : 'Mockup triple'} ${item.template.match(/\d+/)[0]}/20`);
+            lastTemplate = item.template;
+            cells[i].classList.add('is-current');
+            stage.classList.add('is-inserting');
+            await wait(instant() ? 0 : fast ? 380 : 650);
+            shot.src = item.src;
+            stage.classList.remove('is-inserting');
+            stage.classList.add('is-placed');
+            await wait(instant() ? 0 : fast ? 420 : 700);
+            cells[i].classList.remove('is-current');
+            cells[i].classList.add('is-done');
+            counter.textContent = `${++done}/${total}`;
+            if (!fast || i % 3 === 2) write(`[${time()}]   → ${item.file}`);
+            await wait(instant() ? 0 : fast ? 120 : 260);
+          }
         }
-        write(`[${time()}]   p71_y_mockup_1…20.png`);
-        return 1500;
+        write(`[${time()}]   Шаблоны без файла пропущены · экспортировано ${total} PNG`);
+        return 1800;
       },
       async sizes(token, wait) {
         const grid = el('div', { class: 'pp-sizes' });
         visual.replaceChildren(grid);
-        write(`[${time()}]   ${'11 печатных размеров × 3 изображения'}`);
+        write(`[${time()}]   11 печатных размеров × 3 изображения`);
         for (const [w, h] of info.sizes) {
           const name = `${w}×${h} in`;
           const px = `${Math.round(w * 300)}×${Math.round(h * 300)} px`;
           grid.append(el('figure', { class: 'pp-size is-in', style: `--w:${w};--h:${h}` }, el('span', { class: 'pp-size-frame' }, img(art.center)), el('figcaption', {}, el('b', { text: name }), el('small', { text: px }))));
-          if (grid.children.length <= 2 || grid.children.length === 11) write(`[${time()}]   p71_c_${String(w).replace('.', '.')}x${h}in.png · ${px}`);
+          if (grid.children.length <= 2 || grid.children.length === 11) write(`[${time()}]   ${p}_c_${w}x${h}in.png · ${px}`);
           await wait(240);
         }
         write(`[${time()}]   33 PNG · 300 dpi`);
@@ -720,11 +594,11 @@
         return 1800;
       },
       async result(token, wait) {
-        const row = el('div', { class: 'pp-result' }, [art.mockup, art.p74, art.p127].map((src) => img(src, 'is-in')));
+        const row = el('div', { class: 'pp-result' }, info.result.map((src) => img(src, 'is-in')));
         const sum = el('ul', { class: 'pp-summary' },
-          el('li', {}, el('b', { text: '3' }), labels.sources), el('li', {}, el('b', { text: '20' }), labels.mockups), el('li', {}, el('b', { text: '33' }), labels.prints), el('li', {}, el('b', { text: '56' }), labels.files));
+          el('li', {}, el('b', { text: '3' }), labels.sources), el('li', {}, el('b', { text: String(info.mockups.length + (info.singles || []).length) }), labels.mockups), el('li', {}, el('b', { text: '33' }), labels.prints), el('li', {}, el('b', { text: String(info.mockups.length + (info.singles || []).length + 33) }), labels.files));
         visual.replaceChildren(row, sum);
-        write(`[${time()}] p71/ · 56 ${labels.files}`);
+        write(`[${time()}] ${p}/ · ${info.mockups.length + (info.singles || []).length + 33} ${labels.files}`);
         return 3600;
       },
     };
@@ -766,7 +640,6 @@
   const start = () => {
     for (const root of $$(document, '[data-strata]')) initStrata(root);
     for (const root of $$(document, '[data-vectorizer]')) initVectorizer(root);
-    for (const root of $$(document, '[data-floatbar]')) initFloatbar(root);
     for (const section of $$(document, '.sc-pipeline')) initPipeline(section);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
