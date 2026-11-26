@@ -349,6 +349,7 @@
       stats.textContent = `${info.colours.length} ${labels.colours} · ${info.paths.length} ${labels.shapes} · ${labels.size} ${Math.round(ex.svgBytes / 1024)} KB`;
     }
     function paintZoom(ex) {
+      if (!zoomRaster || !zoomVector) return;
       const [fx, fy] = focus[ex.key];
       for (const [box, src] of [[zoomRaster, ex.input], [zoomVector, ex.svg]]) {
         box.style.backgroundImage = `url("${src}")`;

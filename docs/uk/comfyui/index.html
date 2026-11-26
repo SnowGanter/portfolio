@@ -18,10 +18,10 @@
   <meta name="twitter:description" content="Локальний агент Strata, векторизатор і панель ComfyFloatBar для Photoshop.">
   <title>ComfyUI · Strata Agent, векторизатор, ComfyFloatBar</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/site.css?v=19300720fce9">
-  <script src="/assets/i18n.js?v=19300720fce9" defer></script>
-  <script src="/assets/site.js?v=19300720fce9" defer></script>
-  <script src="/assets/youtube.js?v=19300720fce9" defer></script>
+  <link rel="stylesheet" href="/assets/site.css?v=c0f047d07fa5">
+  <script src="/assets/i18n.js?v=c0f047d07fa5" defer></script>
+  <script src="/assets/site.js?v=c0f047d07fa5" defer></script>
+  <script src="/assets/youtube.js?v=c0f047d07fa5" defer></script>
   
 <link rel="canonical" href="https://cv-designer.me/uk/comfyui/"><meta property="og:url" content="https://cv-designer.me/uk/comfyui/"><link rel="alternate" hreflang="en" href="https://cv-designer.me/comfyui/"><link rel="alternate" hreflang="uk" href="https://cv-designer.me/uk/comfyui/"><link rel="alternate" hreflang="ru" href="https://cv-designer.me/ru/comfyui/"><link rel="alternate" hreflang="x-default" href="https://cv-designer.me/comfyui/"><meta property="og:locale" content="uk_UA">
 </head>
@@ -37,7 +37,7 @@
       <nav class="mobile-nav" id="portfolio-mobile-navigation" aria-label="Напрями портфоліо"><a href="/uk/etsy/">Etsy</a><a href="/uk/amazon/">Amazon A+</a><a href="/uk/photoshop/">Photoshop Scripts</a><a href="/uk/comfyui/" aria-current="page">ComfyUI</a><a href="/uk/advertising/">Реклама</a><a class="header-contact" href="#contact">Написати</a></nav>
     </details>
   </header>
-  <link rel="stylesheet" href="/assets/showcase.css?v=19300720fce9"><script src="/assets/showcase.js?v=19300720fce9" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=19300720fce9"><script src="/assets/floatbar-demo.js?v=19300720fce9" defer></script><main id="main" class="sc-page">
+  <link rel="stylesheet" href="/assets/showcase.css?v=c0f047d07fa5"><script src="/assets/showcase.js?v=c0f047d07fa5" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=c0f047d07fa5"><script src="/assets/floatbar-demo.js?v=c0f047d07fa5" defer></script><main id="main" class="sc-page">
   <section class="section-intro wrap"><div><p class="eyebrow">ЛОКАЛЬНІ ШІ-ІНСТРУМЕНТИ</p><h1>ComfyUI</h1></div><p>Власні інструменти навколо ComfyUI: локальний агент для дизайну, векторизатор і панель для Photoshop. Демо інтерактивні, а зображення — реальні результати моїх проєктів.</p></section>
   <nav class="sc-jump wrap" aria-label="На сторінці"><a href="#strata-agent">Strata Agent</a><a href="#vectorizer">Від растра до чистого SVG</a><a href="#comfyfloatbar">ComfyFloatBar</a></nav>
   <div class="wrap sc-stack"><section class="sc-section sc-strata" id="strata-agent" aria-labelledby="strata-title">
@@ -78,7 +78,6 @@
         <div class="vz-svg" data-vz-svg><img src="/assets/showcase/vector/flowers.svg" alt="SVG · Квіти й сонце" loading="lazy" decoding="async"></div>
         <i class="vz-scan" aria-hidden="true"></i>
         <span class="vz-badge" data-vz-badge>SVG</span>
-        <div class="vz-zoom" data-vz-zoom aria-hidden="true"><figure><div class="vz-zoom-box" data-vz-zoom-raster></div><figcaption>Растр ×6</figcaption></figure><figure><div class="vz-zoom-box" data-vz-zoom-vector></div><figcaption>Вектор ×6</figcaption></figure></div>
       </div>
       <aside class="vz-side">
         <ol class="vz-steps" aria-label="Етапи векторизації"><li><button type="button" data-vz-stage="0" aria-current="false"><b>01</b><span><strong>Вхід</strong><small>PNG або JPEG; прозорість відновлюється з маски.</small></span></button></li><li><button type="button" data-vz-stage="1" aria-current="false"><b>02</b><span><strong>Апскейл і ліміт 2 Мп</strong><small>RealESRGAN ×4 робить краї чіткішими й прибирає шум JPEG, потім зображення знову обмежується до 2 Мп: 1632 × 1224 px.</small></span></button></li><li><button type="button" data-vz-stage="2" aria-current="false"><b>03</b><span><strong>Палітра</strong><small>Близькі відтінки (різниця менше 12 за RGB) об’єднуються; дрібні уламки й дзвін JPEG уздовж країв приєднуються до найближчого кольору, а контрастні точки лишаються.</small></span></button></li><li><button type="button" data-vz-stage="3" aria-current="false"><b>04</b><span><strong>Контури</strong><small>potrace обводить кожну кольорову область за растром ×2.</small></span></button></li><li><button type="button" data-vz-stage="4" aria-current="false"><b>05</b><span><strong>Укладання</strong><small>Спершу великі заливки, вище деталі, згори лінії й літери; нижні фігури заходять під верхні на 1,5 px, тому щілин немає.</small></span></button></li><li><button type="button" data-vz-stage="5" aria-current="step"><b>06</b><span><strong>SVG</strong><small>Справжній векторний файл без вбудованого растра: при збільшенні краї лишаються чіткими.</small></span></button></li></ol>

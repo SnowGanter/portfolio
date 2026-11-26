@@ -18,10 +18,10 @@
   <meta name="twitter:description" content="The local Strata agent, a vectoriser and the ComfyFloatBar panel for Photoshop.">
   <title>ComfyUI · Strata Agent, vectoriser, ComfyFloatBar</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/site.css?v=19300720fce9">
-  <script src="/assets/i18n.js?v=19300720fce9" defer></script>
-  <script src="/assets/site.js?v=19300720fce9" defer></script>
-  <script src="/assets/youtube.js?v=19300720fce9" defer></script>
+  <link rel="stylesheet" href="/assets/site.css?v=c0f047d07fa5">
+  <script src="/assets/i18n.js?v=c0f047d07fa5" defer></script>
+  <script src="/assets/site.js?v=c0f047d07fa5" defer></script>
+  <script src="/assets/youtube.js?v=c0f047d07fa5" defer></script>
   
 <link rel="canonical" href="https://cv-designer.me/comfyui/"><meta property="og:url" content="https://cv-designer.me/comfyui/"><link rel="alternate" hreflang="en" href="https://cv-designer.me/comfyui/"><link rel="alternate" hreflang="uk" href="https://cv-designer.me/uk/comfyui/"><link rel="alternate" hreflang="ru" href="https://cv-designer.me/ru/comfyui/"><link rel="alternate" hreflang="x-default" href="https://cv-designer.me/comfyui/"><meta property="og:locale" content="en_US">
 </head>
@@ -37,7 +37,7 @@
       <nav class="mobile-nav" id="portfolio-mobile-navigation" aria-label="Portfolio sections"><a href="/etsy/">Etsy</a><a href="/amazon/">Amazon A+</a><a href="/photoshop/">Photoshop Scripts</a><a href="/comfyui/" aria-current="page">ComfyUI</a><a href="/advertising/">Advertising</a><a class="header-contact" href="#contact">Get in touch</a></nav>
     </details>
   </header>
-  <link rel="stylesheet" href="/assets/showcase.css?v=19300720fce9"><script src="/assets/showcase.js?v=19300720fce9" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=19300720fce9"><script src="/assets/floatbar-demo.js?v=19300720fce9" defer></script><main id="main" class="sc-page">
+  <link rel="stylesheet" href="/assets/showcase.css?v=c0f047d07fa5"><script src="/assets/showcase.js?v=c0f047d07fa5" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=c0f047d07fa5"><script src="/assets/floatbar-demo.js?v=c0f047d07fa5" defer></script><main id="main" class="sc-page">
   <section class="section-intro wrap"><div><p class="eyebrow">LOCAL AI TOOLS</p><h1>ComfyUI</h1></div><p>My own tools around ComfyUI: a local design agent, a vectoriser and a Photoshop panel. The demos are interactive, and the images are real results from my projects.</p></section>
   <nav class="sc-jump wrap" aria-label="On this page"><a href="#strata-agent">Strata Agent</a><a href="#vectorizer">From raster to clean SVG</a><a href="#comfyfloatbar">ComfyFloatBar</a></nav>
   <div class="wrap sc-stack"><section class="sc-section sc-strata" id="strata-agent" aria-labelledby="strata-title">
@@ -78,7 +78,6 @@
         <div class="vz-svg" data-vz-svg><img src="/assets/showcase/vector/flowers.svg" alt="SVG · Flowers and sun" loading="lazy" decoding="async"></div>
         <i class="vz-scan" aria-hidden="true"></i>
         <span class="vz-badge" data-vz-badge>SVG</span>
-        <div class="vz-zoom" data-vz-zoom aria-hidden="true"><figure><div class="vz-zoom-box" data-vz-zoom-raster></div><figcaption>Raster ×6</figcaption></figure><figure><div class="vz-zoom-box" data-vz-zoom-vector></div><figcaption>Vector ×6</figcaption></figure></div>
       </div>
       <aside class="vz-side">
         <ol class="vz-steps" aria-label="Vectoriser stages"><li><button type="button" data-vz-stage="0" aria-current="false"><b>01</b><span><strong>Input</strong><small>PNG or JPEG; transparency is restored from the mask.</small></span></button></li><li><button type="button" data-vz-stage="1" aria-current="false"><b>02</b><span><strong>Upscale and 2 MP limit</strong><small>RealESRGAN ×4 sharpens edges and removes JPEG noise, then the image is limited back to 2 MP: 1632 × 1224 px.</small></span></button></li><li><button type="button" data-vz-stage="2" aria-current="false"><b>03</b><span><strong>Palette</strong><small>Close shades (less than 12 apart in RGB) merge; specks and JPEG ringing along edges join the nearest colour, while contrasting dots stay.</small></span></button></li><li><button type="button" data-vz-stage="3" aria-current="false"><b>04</b><span><strong>Contours</strong><small>potrace outlines every colour region on the 2× raster.</small></span></button></li><li><button type="button" data-vz-stage="4" aria-current="false"><b>05</b><span><strong>Stacking</strong><small>Large fills first, details above, lines and letters on top; lower shapes run 1.5 px under the upper ones, so no gaps appear.</small></span></button></li><li><button type="button" data-vz-stage="5" aria-current="step"><b>06</b><span><strong>SVG</strong><small>A real vector file with no embedded raster: zoom in and the edges stay sharp.</small></span></button></li></ol>
