@@ -350,6 +350,42 @@
 .pp-strip li small { position: absolute; left: 2px; bottom: 2px; padding: 0 3px; border-radius: 3px; background: #000a; color: #fff; font-size: 9px; line-height: 1.4; }
 .pp-strip--single li small { display: none; }
 
+/* ------------------------------------------------------------ Blender -> MiniMax H3 video */
+.bh3-canvas { position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: 12px; background: #0e0d0c; box-shadow: inset 0 0 0 1px var(--line); }
+.bh3-v, .bh3-anchor, .bh3-clip, .bh3-up { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bh3-v, .bh3-anchor, .bh3-clip, .bh3-up--before { opacity: 0; transition: opacity .6s ease; }
+/* the demo clips are decorative layers: no native overlay controls (mobile Chrome shows them on touch) */
+.bh3-v { pointer-events: none; }
+.bh3-v::-webkit-media-controls, .bh3-v::-webkit-media-controls-enclosure, .bh3-v::-webkit-media-controls-panel { display: none !important; }
+.bh3-clip { clip-path: inset(0 0 0 var(--split)); }
+.bh3-clip > * { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bh3-clip .bh3-up--after { opacity: 0; }
+.bh3-canvas[data-stage="0"] .bh3-v--clay,
+.bh3-canvas[data-stage="1"] .bh3-v--depth, .bh3-canvas[data-stage="2"] .bh3-v--depth, .bh3-canvas[data-stage="3"] .bh3-v--depth,
+.bh3-canvas[data-stage="2"] .bh3-anchor,
+.bh3-canvas[data-stage="3"] .bh3-clip, .bh3-canvas[data-stage="3"] .bh3-v--film,
+.bh3-canvas[data-stage="4"] .bh3-clip, .bh3-canvas[data-stage="4"] .bh3-up--before, .bh3-canvas[data-stage="4"] .bh3-up--after,
+.bh3-canvas[data-stage="5"] .bh3-clip, .bh3-canvas[data-stage="5"] .bh3-v--film { opacity: 1; }
+.bh3-canvas[data-stage="1"] .bh3-v--clay { opacity: 1; transition: none; }
+.bh3-canvas[data-stage="5"] { --split: 0% !important; }
+/* wipe-in of the next layer: depth over clay, anchor over depth */
+.bh3-canvas.is-wipe[data-stage="1"] .bh3-v--depth, .bh3-canvas.is-wipe[data-stage="2"] .bh3-anchor { animation: bh3-wipe 1.6s cubic-bezier(.6, 0, .2, 1) both; transition: none; }
+@keyframes bh3-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.bh3-line { position: absolute; top: 0; bottom: 0; left: var(--split); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px #0004; opacity: 0; pointer-events: none; }
+.bh3-line::after { content: "⇆"; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #1b1d22; font-size: 16px; box-shadow: 0 4px 14px #0005; transform: translate(-50%, -50%); }
+.bh3-tag { position: absolute; bottom: 12px; padding: 4px 10px; border-radius: 999px; background: #171a20d9; color: #fff; font-size: 12px; font-weight: 600; opacity: 0; transition: opacity .4s; pointer-events: none; }
+.bh3-tag--left { left: 12px; }
+.bh3-tag--right { right: 12px; }
+.bh3-range { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; pointer-events: none; }
+.bh3-canvas[data-stage="3"] :is(.bh3-line, .bh3-tag), .bh3-canvas[data-stage="4"] :is(.bh3-line, .bh3-tag) { opacity: 1; }
+.bh3-canvas[data-stage="3"] .bh3-range, .bh3-canvas[data-stage="4"] .bh3-range { pointer-events: auto; }
+.bh3-canvas:has(.bh3-range:focus-visible) { outline: 3px solid var(--accent); outline-offset: 3px; }
+.bh3-canvas .vz-badge { z-index: 3; }
+.bh3-final { display: grid; gap: 8px; margin: clamp(16px, 2vw, 24px) 0 0; }
+.bh3-final video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 12px; background: #000; }
+.bh3-final figcaption { color: var(--muted); font-size: 13.5px; }
+.bh3-final figcaption strong { color: var(--ink); }
+
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1180px) {
   .ps-body { grid-template-columns: 40px minmax(0, 1fr) 190px; }
@@ -397,6 +433,7 @@
   .ps-layer.is-revealing { clip-path: none; }
   .pp-mock .pp-so { display: none; }
   .pp-mock .pp-mock-result { opacity: 1; filter: none; }
+  .bh3-canvas.is-wipe .bh3-v--depth, .bh3-canvas.is-wipe .bh3-anchor { clip-path: none; }
 }
 /* Agent: link to the finished set on Etsy */
 .sa-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 2px; padding: 8px 14px; border: 1px solid #f1641e; border-radius: 999px; background: #f1641e1f; color: #ffb68f; font-size: 13px; font-weight: 600; text-decoration: none; }

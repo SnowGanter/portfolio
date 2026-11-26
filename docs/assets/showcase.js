@@ -642,9 +642,155 @@
     if (!reduced.matches) runner.start((token) => sequence(token, 0));
   }
 
+  // ---------------------------------------------------------------- Blender -> MiniMax H3 video
+  // Clay, depth and film clips of a shot share one timeline; they only play while the block is
+  // on screen, the tab is visible and the user has not paused. Reduced motion: nothing starts itself.
+  function initBlenderVideo(root) {
+    const shots = data(root, '[data-bh3-shots]');
+    const labels = JSON.parse(root.dataset.labels);
+    const canvas = $(root, '[data-bh3-canvas]');
+    const clay = $(root, '[data-bh3-clay]');
+    const depth = $(root, '[data-bh3-depth]');
+    const film = $(root, '[data-bh3-film]');
+    const videos = [clay, depth, film];
+    const anchor = $(root, '[data-bh3-anchor]');
+    const range = $(root, '[data-bh3-range]');
+    const rangeLabels = JSON.parse(range.dataset.labels);
+    const tagLeft = $(root, '[data-bh3-tag-left]');
+    const tagRight = $(root, '[data-bh3-tag-right]');
+    const badge = $(root, '[data-bh3-badge]');
+    const meta = $(root, '[data-bh3-meta]');
+    const toggle = $(root, '[data-bh3-toggle]');
+    const stageButtons = $$(root, '[data-bh3-stage]');
+    const nodes = $$(root, '[data-bh3-node]');
+    const shotButtons = $$(root, '[data-bh3-shot]');
+    const final = $(root, '[data-bh3-final]');
+    const runner = new Runner(root);
+    let shot = 0;
+    let stage = 3;
+    let auto = !reduced.matches;
+    let userPlay = !reduced.matches;
+    let held = false;                       // stage 2 holds the depth clip on the anchored frame
+
+    // The owner asked for a quiet default: the finished spot starts at 20% volume.
+    final.volume = 0.2;
+    final.addEventListener('loadedmetadata', () => { if (!final.dataset.touched) final.volume = 0.2; }, { once: true });
+    final.addEventListener('volumechange', () => { final.dataset.touched = '1'; });
+    // The demo clips rest while the finished spot plays, and continue after it stops.
+    for (const type of ['play', 'pause', 'ended']) final.addEventListener(type, () => syncPlayback());
+
+    const shouldPlay = () => runner.visible && !runner.paused && userPlay && !held && document.visibilityState === 'visible' && final.paused;
+    function syncPlayback() {
+      const play = shouldPlay();
+      for (const v of videos) {
+        if (play && v.paused) v.play().catch(() => {});
+        else if (!play && !v.paused) v.pause();
+      }
+    }
+    // Keep the three clips on one clock (the film is the reference).
+    setInterval(() => {
+      if (film.paused || held) return;
+      for (const v of [clay, depth]) if (Math.abs(v.currentTime - film.currentTime) > 0.08) v.currentTime = film.currentTime;
+    }, 500);
+    new IntersectionObserver(() => setTimeout(syncPlayback), { threshold: 0.12 }).observe(root);
+    document.addEventListener('visibilitychange', syncPlayback);
+
+    function setSplit(value) {
+      range.value = String(Math.round(value));
+      canvas.style.setProperty('--split', value + '%');
+    }
+    async function slide(from, to, ms, token) {
+      const steps = Math.max(1, Math.round(ms / 33));
+      for (let i = 0; i <= steps; i++) {
+        const k = i / steps;
+        setSplit(from + (to - from) * (k * k * (3 - 2 * k)));
+        await runner.sleep(33, token);
+      }
+    }
+    function restartClips() {
+      for (const v of videos) { try { v.currentTime = 0; } catch { /* not loaded yet */ } }
+    }
+    function render(index, animate) {
+      const s = shots[shot];
+      stage = index;
+      canvas.dataset.stage = String(index);
+      canvas.classList.remove('is-wipe');
+      if (animate && (index === 1 || index === 2)) { void canvas.offsetWidth; canvas.classList.add('is-wipe'); }
+      nodes.forEach((node, i) => { node.classList.toggle('is-active', i === index); node.classList.toggle('is-done', i < index); });
+      stageButtons.forEach((button, i) => button.setAttribute('aria-current', i === index ? 'step' : 'false'));
+      badge.textContent = nodes[index].textContent;
+      const upscale = index === 4;
+      tagLeft.textContent = upscale ? rangeLabels.before : rangeLabels.control;
+      tagRight.textContent = upscale ? rangeLabels.after : rangeLabels.result;
+      range.setAttribute('aria-valuetext', `${tagLeft.textContent} | ${tagRight.textContent}`);
+      meta.textContent = index === 2 ? `${s.label} · ${s.anchorType === 'first' ? labels.anchorFirst : labels.anchorLast}` : `${s.label} · 124 × 24 fps`;
+      held = index === 2;
+      if (held) {
+        // Show the depth frame the anchor was painted from: frame 1 or frame 124.
+        for (const v of videos) v.pause();
+        const seek = () => { depth.currentTime = s.anchorType === 'first' ? 0 : Math.max(0, depth.duration - 0.05); };
+        if (depth.readyState >= 1) seek(); else depth.addEventListener('loadedmetadata', seek, { once: true });
+      }
+      if (index === 3 && animate) restartClips();
+      syncPlayback();
+    }
+    function selectShot(index) {
+      shot = index;
+      const s = shots[index];
+      shotButtons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
+      clay.src = s.clay; depth.src = s.depth; film.src = s.film;
+      depth.poster = s.anchor; film.poster = s.anchor;
+      anchor.src = s.anchor;
+    }
+    const durations = [4200, 3600, 3400, 0, 0, 5200];
+    async function cycle(token) {
+      for (;;) {
+        for (let i = 0; i < 6; i++) {
+          render(i, true);
+          if (i === 3) { setSplit(92); await runner.sleep(900, token); await slide(92, 50, 1800, token); await runner.sleep(3600, token); }
+          else if (i === 4) { setSplit(50); await runner.sleep(600, token); await slide(50, 25, 1100, token); await slide(25, 72, 1700, token); await runner.sleep(900, token); }
+          else await runner.sleep(durations[i], token);
+        }
+        await runner.sleep(800, token);
+        selectShot((shot + 1) % shots.length);
+      }
+    }
+    function manual() { auto = false; runner.stop(); }
+    shotButtons.forEach((button, index) => button.addEventListener('click', () => {
+      selectShot(index);
+      if (auto) runner.start((token) => cycle(token)); else render(stage, false);
+    }));
+    stageButtons.forEach((button, index) => button.addEventListener('click', () => {
+      manual();
+      if (index === 3 || index === 4) setSplit(50);
+      render(index, !reduced.matches);
+    }));
+    range.addEventListener('input', () => { if (auto) manual(); setSplit(Number(range.value)); });
+    $(root, '[data-bh3-replay]').addEventListener('click', () => {
+      auto = !reduced.matches;
+      userPlay = true;
+      if (auto) { selectShot(0); runner.start((token) => cycle(token)); } else { restartClips(); render(3, false); }
+    });
+    toggle.addEventListener('click', () => {
+      const paused = toggle.getAttribute('aria-pressed') !== 'true';
+      toggle.setAttribute('aria-pressed', String(paused));
+      toggle.textContent = paused ? labels.play : labels.pause;
+      userPlay = !paused;
+      runner.setPaused(paused);
+      syncPlayback();
+    });
+    if (reduced.matches) {
+      toggle.setAttribute('aria-pressed', 'true');
+      toggle.textContent = labels.play;
+      runner.setPaused(true);
+      render(3, false);
+    } else runner.start((token) => cycle(token));
+  }
+
   const start = () => {
     for (const root of $$(document, '[data-strata]')) initStrata(root);
     for (const root of $$(document, '[data-vectorizer]')) initVectorizer(root);
+    for (const root of $$(document, '[data-bh3]')) initBlenderVideo(root);
     for (const section of $$(document, '.sc-pipeline')) initPipeline(section);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

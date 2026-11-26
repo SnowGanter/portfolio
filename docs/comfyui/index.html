@@ -18,10 +18,10 @@
   <meta name="twitter:description" content="The local Strata agent, a vectoriser and the ComfyFloatBar panel for Photoshop.">
   <title>ComfyUI · Strata Agent, vectoriser, ComfyFloatBar</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/site.css?v=c0f047d07fa5">
-  <script src="/assets/i18n.js?v=c0f047d07fa5" defer></script>
-  <script src="/assets/site.js?v=c0f047d07fa5" defer></script>
-  <script src="/assets/youtube.js?v=c0f047d07fa5" defer></script>
+  <link rel="stylesheet" href="/assets/site.css?v=5fa9c136ee52">
+  <script src="/assets/i18n.js?v=5fa9c136ee52" defer></script>
+  <script src="/assets/site.js?v=5fa9c136ee52" defer></script>
+  <script src="/assets/youtube.js?v=5fa9c136ee52" defer></script>
   
 <link rel="canonical" href="https://cv-designer.me/comfyui/"><meta property="og:url" content="https://cv-designer.me/comfyui/"><link rel="alternate" hreflang="en" href="https://cv-designer.me/comfyui/"><link rel="alternate" hreflang="uk" href="https://cv-designer.me/uk/comfyui/"><link rel="alternate" hreflang="ru" href="https://cv-designer.me/ru/comfyui/"><link rel="alternate" hreflang="x-default" href="https://cv-designer.me/comfyui/"><meta property="og:locale" content="en_US">
 </head>
@@ -37,9 +37,9 @@
       <nav class="mobile-nav" id="portfolio-mobile-navigation" aria-label="Portfolio sections"><a href="/etsy/">Etsy</a><a href="/amazon/">Amazon A+</a><a href="/photoshop/">Photoshop Scripts</a><a href="/comfyui/" aria-current="page">ComfyUI</a><a href="/advertising/">Advertising</a><a class="header-contact" href="#contact">Get in touch</a></nav>
     </details>
   </header>
-  <link rel="stylesheet" href="/assets/showcase.css?v=c0f047d07fa5"><script src="/assets/showcase.js?v=c0f047d07fa5" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=c0f047d07fa5"><script src="/assets/floatbar-demo.js?v=c0f047d07fa5" defer></script><main id="main" class="sc-page">
-  <section class="section-intro wrap"><div><p class="eyebrow">LOCAL AI TOOLS</p><h1>ComfyUI</h1></div><p>My own tools around ComfyUI: a local design agent, a vectoriser and a Photoshop panel. The demos are interactive, and the images are real results from my projects.</p></section>
-  <nav class="sc-jump wrap" aria-label="On this page"><a href="#strata-agent">Strata Agent</a><a href="#vectorizer">From raster to clean SVG</a><a href="#comfyfloatbar">ComfyFloatBar</a></nav>
+  <link rel="stylesheet" href="/assets/showcase.css?v=5fa9c136ee52"><script src="/assets/showcase.js?v=5fa9c136ee52" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=5fa9c136ee52"><script src="/assets/floatbar-demo.js?v=5fa9c136ee52" defer></script><main id="main" class="sc-page">
+  <section class="section-intro wrap"><div><p class="eyebrow">LOCAL AI TOOLS</p><h1>ComfyUI</h1></div><p>My own tools around ComfyUI: a local design agent, a vectoriser, a Photoshop panel and a Blender-to-video pipeline. The demos are interactive, and the images and videos are real results from my projects.</p></section>
+  <nav class="sc-jump wrap" aria-label="On this page"><a href="#strata-agent">Strata Agent</a><a href="#vectorizer">From raster to clean SVG</a><a href="#comfyfloatbar">ComfyFloatBar</a><a href="#blender-video">Blender → video</a></nav>
   <div class="wrap sc-stack"><section class="sc-section sc-strata" id="strata-agent" aria-labelledby="strata-title">
   <header class="sc-head"><p class="eyebrow">LOCAL DESIGN AGENT</p><h2 id="strata-title">Strata Agent</h2><p class="sc-lead">An agent I built for my own design work. It runs on a home PC: the open-source Strata engine serves the Qwen3.8-Flash-Next language model, ComfyUI draws and edits images, and Photoshop assembles layered PSD files. Like a coding agent, it plans the task, calls tools, checks every result itself and fixes what is wrong.</p></header>
   <ul class="sa-facts"><li><strong>Qwen3.8-Flash-Next</strong><span>a 125-billion-parameter MoE model, IQ2_XS, run locally through Strata</span></li><li><strong>Krea 2 · Flux3 Klein · Qwen Image 2.1</strong><span>generation, local fixes and cut-outs in ComfyUI</span></li><li><strong>Photoshop · Topaz</strong><span>layered PSD files with smart objects and print upscaling</span></li><li><strong>~5 min</strong><span>to swap the GPU between the language model and ComfyUI, so the agent batches image work</span></li></ul>
@@ -748,6 +748,39 @@
     <button type="button" class="cfba-tray" data-cfba-tray hidden>ComfyFloatBar is in the tray — open</button>
   </div>
   <p class="sc-note">The panel keeps its original Russian interface; as in the app, the main button of the open section is pinned to the bottom of the panel. The UX/UI and A+ sections are not shown. Demo: results are prepared from my projects; ComfyUI does not run in the browser.</p>
+</section><section class="sc-section sc-bh3" id="blender-video" aria-labelledby="bh3-title">
+  <header class="sc-head"><p class="eyebrow">BLENDER → COMFYUI VIDEO</p><h2 id="bh3-title">A product film with a camera from Blender</h2><p class="sc-lead">A video model invents its own camera moves, so it is hard to direct. Here the shot is planned in 3D first: a Python script builds a minimal Blender scene from primitives, animates the camera and renders a depth pass. In ComfyUI, MiniMax H3 with the Fun ControlNet Union follows that depth video frame by frame, so the generated film repeats the layout and the camera path, while the prompt and an anchor frame set the look. Everything runs locally on one RTX 3090; my scripts drive Blender and the ComfyUI API end to end.</p></header>
+  <ul class="sa-facts"><li><strong>3 shots · 17 s</strong><span>an edited 1080p spot; each shot is 124 frames at 24 fps</span></li><li><strong>RTX 3090 · 24 GB</strong><span>everything local; models run one at a time in the ComfyUI queue</span></li><li><strong>~9–14 min</strong><span>to generate a 5-second shot with the 8-step turbo LoRA, plus ~13 min of SeedVR2 restoration</span></li><li><strong>VELMÈRE</strong><span>a fictional brand and an AI concept, not a real product or client</span></li></ul>
+  <div class="vz bh3" data-bh3 data-labels="{&quot;play&quot;:&quot;Play&quot;,&quot;pause&quot;:&quot;Pause&quot;,&quot;anchorFirst&quot;:&quot;anchors the first frame&quot;,&quot;anchorLast&quot;:&quot;anchors the last frame&quot;}">
+    <script type="application/json" data-bh3-shots>[{"id":"s1","label":"Slide through pearls","anchorType":"first","clay":"/assets/showcase/h3/s1-clay.mp4","depth":"/assets/showcase/h3/s1-depth.mp4","film":"/assets/showcase/h3/s1-film.mp4","anchor":"/assets/showcase/h3/s1-anchor.webp"},{"id":"s2","label":"Spiral crane","anchorType":"last","clay":"/assets/showcase/h3/s2-clay.mp4","depth":"/assets/showcase/h3/s2-depth.mp4","film":"/assets/showcase/h3/s2-film.mp4","anchor":"/assets/showcase/h3/s2-anchor.webp"},{"id":"s3","label":"Macro pull-back","anchorType":"last","clay":"/assets/showcase/h3/s3-clay.mp4","depth":"/assets/showcase/h3/s3-depth.mp4","film":"/assets/showcase/h3/s3-film.mp4","anchor":"/assets/showcase/h3/s3-anchor.webp"}]</script>
+    <div class="vz-toolbar">
+      <div class="vz-examples" role="group" aria-label="Shot"><button type="button" data-bh3-shot="s1" aria-pressed="true">01 · Slide through pearls</button><button type="button" data-bh3-shot="s2" aria-pressed="false">02 · Spiral crane</button><button type="button" data-bh3-shot="s3" aria-pressed="false">03 · Macro pull-back</button></div>
+      <div class="vz-controls"><button type="button" data-bh3-toggle aria-pressed="false">Pause</button><button type="button" data-bh3-replay>↻ Replay</button></div>
+    </div>
+    <ol class="vz-graph" aria-hidden="true"><li data-bh3-node="0"><span>Blender · bpy</span></li><li data-bh3-node="1"><span>Depth pass</span></li><li data-bh3-node="2"><span>Qwen Image 2.1 · ControlNet</span></li><li data-bh3-node="3" class="is-active"><span>MiniMax H3 · Fun ControlNet</span></li><li data-bh3-node="4"><span>SeedVR2 7B</span></li><li data-bh3-node="5"><span>Edit · Music 3</span></li></ol>
+    <div class="vz-main">
+      <div class="bh3-canvas" data-bh3-canvas data-stage="3" style="--split:50%">
+        <video class="bh3-v bh3-v--clay" data-bh3-clay src="/assets/showcase/h3/s1-clay.mp4" muted loop playsinline preload="metadata" disablepictureinpicture aria-hidden="true" tabindex="-1"></video>
+        <video class="bh3-v bh3-v--depth" data-bh3-depth src="/assets/showcase/h3/s1-depth.mp4" muted loop playsinline preload="metadata" disablepictureinpicture aria-hidden="true" tabindex="-1" poster="/assets/showcase/h3/s1-anchor.webp"></video>
+        <img class="bh3-anchor" data-bh3-anchor src="/assets/showcase/h3/s1-anchor.webp" alt="" width="960" height="540" loading="lazy" decoding="async">
+        <div class="bh3-clip"><video class="bh3-v bh3-v--film" data-bh3-film src="/assets/showcase/h3/s1-film.mp4" muted loop playsinline preload="metadata" disablepictureinpicture aria-hidden="true" tabindex="-1" poster="/assets/showcase/h3/s1-anchor.webp"></video><img class="bh3-up bh3-up--after" src="/assets/showcase/h3/upscale-after.webp" alt="" loading="lazy" decoding="async"></div>
+        <img class="bh3-up bh3-up--before" src="/assets/showcase/h3/upscale-before.webp" alt="" loading="lazy" decoding="async">
+        <i class="bh3-line" aria-hidden="true"></i>
+        <span class="bh3-tag bh3-tag--left" data-bh3-tag-left>Depth control</span><span class="bh3-tag bh3-tag--right" data-bh3-tag-right>Generated</span>
+        <input class="bh3-range" data-bh3-range type="range" min="0" max="100" value="50" aria-label="Divider between control and result" data-labels="{&quot;control&quot;:&quot;Depth control&quot;,&quot;result&quot;:&quot;Generated&quot;,&quot;before&quot;:&quot;H3 · 1344 × 768&quot;,&quot;after&quot;:&quot;SeedVR2 · 1920 × 1088&quot;}">
+        <span class="vz-badge" data-bh3-badge>MiniMax H3 · Fun ControlNet</span>
+      </div>
+      <aside class="vz-side">
+        <ol class="vz-steps" aria-label="Pipeline stages"><li><button type="button" data-bh3-stage="0" aria-current="false"><b>01</b><span><strong>Blockout and camera</strong><small>A script builds the set from primitives — podium, bottle, monoliths, 26 floating pearls — and keys three camera moves. The grey clay render is only a preview.</small></span></button></li><li><button type="button" data-bh3-stage="1" aria-current="false"><b>02</b><span><strong>Depth pass</strong><small>Every frame stores the distance to the camera: white is near, black is far. The range is fixed for the whole shot, so the map does not flicker. This video steers the generation.</small></span></button></li><li><button type="button" data-bh3-stage="2" aria-current="false"><b>03</b><span><strong>Anchor frame</strong><small>One depth frame becomes a photoreal still: amber crystal, brushed gold, travertine, haze. Eye-level views read best, so shot 1 anchors its first frame and shots 2–3 their last one.</small></span></button></li><li><button type="button" data-bh3-stage="3" aria-current="step"><b>04</b><span><strong>Video generation</strong><small>H3 with the 8-step turbo LoRA paints 124 frames at 1344 × 768 while the depth video holds the layout and the camera path. Drag the divider to compare the control with the result.</small></span></button></li><li><button type="button" data-bh3-stage="4" aria-current="false"><b>05</b><span><strong>Restoration to 1080p</strong><small>One-step video restoration to 1920 × 1088 in temporal chunks with LAB colour matching: crisper glass edges and gold, and no 8 × 8 block flicker from the generation.</small></span></button></li><li><button type="button" data-bh3-stage="5" aria-current="false"><b>06</b><span><strong>Edit and music</strong><small>Clean cuts where the camera is nearly still, a tagline and an end card set as real type (letters are never generated), and one continuous instrumental track from MiniMax Music 3 at a quiet level.</small></span></button></li></ol>
+        <p class="vz-stats" data-bh3-meta>Slide through pearls · 124 × 24 fps</p>
+      </aside>
+    </div>
+    <figure class="bh3-final">
+      <video data-bh3-final src="/assets/showcase/h3/final.mp4" poster="/assets/showcase/h3/final-poster.webp" controls playsinline preload="none" width="1920" height="1080"></video>
+      <figcaption><strong>Final spot · 1080p · sound</strong> <span>The player starts at 20% volume.</span></figcaption>
+    </figure>
+  </div>
+  <p class="sc-note">A concept made to test the method: VELMÈRE is a fictional brand and every frame is generated from my Blender scene. Visible limits are left as they are: a slight shimmer on smooth surfaces from turbo sampling, and in shot 3 the cap briefly darkens. The Blender scene, the ComfyUI API scripts and the edit are mine; the models are MiniMax H3, Qwen Image 2.1, SeedVR2 and MiniMax Music 3.</p>
 </section></div>
 </main>
   <footer class="site-footer" id="contact">

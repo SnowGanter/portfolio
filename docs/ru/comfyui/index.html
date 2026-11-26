@@ -18,10 +18,10 @@
   <meta name="twitter:description" content="Локальный агент Strata, векторизатор и панель ComfyFloatBar для Photoshop.">
   <title>ComfyUI · Strata Agent, векторизатор, ComfyFloatBar</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/site.css?v=c0f047d07fa5">
-  <script src="/assets/i18n.js?v=c0f047d07fa5" defer></script>
-  <script src="/assets/site.js?v=c0f047d07fa5" defer></script>
-  <script src="/assets/youtube.js?v=c0f047d07fa5" defer></script>
+  <link rel="stylesheet" href="/assets/site.css?v=5fa9c136ee52">
+  <script src="/assets/i18n.js?v=5fa9c136ee52" defer></script>
+  <script src="/assets/site.js?v=5fa9c136ee52" defer></script>
+  <script src="/assets/youtube.js?v=5fa9c136ee52" defer></script>
   
 <link rel="canonical" href="https://cv-designer.me/ru/comfyui/"><meta property="og:url" content="https://cv-designer.me/ru/comfyui/"><link rel="alternate" hreflang="en" href="https://cv-designer.me/comfyui/"><link rel="alternate" hreflang="uk" href="https://cv-designer.me/uk/comfyui/"><link rel="alternate" hreflang="ru" href="https://cv-designer.me/ru/comfyui/"><link rel="alternate" hreflang="x-default" href="https://cv-designer.me/comfyui/"><meta property="og:locale" content="ru_RU">
 </head>
@@ -37,9 +37,9 @@
       <nav class="mobile-nav" id="portfolio-mobile-navigation" aria-label="Основные направления"><a href="/ru/etsy/">Etsy</a><a href="/ru/amazon/">Amazon A+</a><a href="/ru/photoshop/">Photoshop Scripts</a><a href="/ru/comfyui/" aria-current="page">ComfyUI</a><a href="/ru/advertising/">Реклама</a><a class="header-contact" href="#contact">Написать</a></nav>
     </details>
   </header>
-  <link rel="stylesheet" href="/assets/showcase.css?v=c0f047d07fa5"><script src="/assets/showcase.js?v=c0f047d07fa5" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=c0f047d07fa5"><script src="/assets/floatbar-demo.js?v=c0f047d07fa5" defer></script><main id="main" class="sc-page">
-  <section class="section-intro wrap"><div><p class="eyebrow">ЛОКАЛЬНЫЕ ИИ-ИНСТРУМЕНТЫ</p><h1>ComfyUI</h1></div><p>Собственные инструменты вокруг ComfyUI: локальный агент для дизайна, векторизатор и панель для Photoshop. Демо интерактивные, а изображения — реальные результаты моих проектов.</p></section>
-  <nav class="sc-jump wrap" aria-label="На странице"><a href="#strata-agent">Strata Agent</a><a href="#vectorizer">От растра к чистому SVG</a><a href="#comfyfloatbar">ComfyFloatBar</a></nav>
+  <link rel="stylesheet" href="/assets/showcase.css?v=5fa9c136ee52"><script src="/assets/showcase.js?v=5fa9c136ee52" defer></script><link rel="stylesheet" href="/assets/floatbar-app.css?v=5fa9c136ee52"><script src="/assets/floatbar-demo.js?v=5fa9c136ee52" defer></script><main id="main" class="sc-page">
+  <section class="section-intro wrap"><div><p class="eyebrow">ЛОКАЛЬНЫЕ ИИ-ИНСТРУМЕНТЫ</p><h1>ComfyUI</h1></div><p>Собственные инструменты вокруг ComfyUI: локальный агент для дизайна, векторизатор, панель для Photoshop и конвейер из Blender в видео. Демо интерактивные, а изображения и видео — реальные результаты моих проектов.</p></section>
+  <nav class="sc-jump wrap" aria-label="На странице"><a href="#strata-agent">Strata Agent</a><a href="#vectorizer">От растра к чистому SVG</a><a href="#comfyfloatbar">ComfyFloatBar</a><a href="#blender-video">Blender → видео</a></nav>
   <div class="wrap sc-stack"><section class="sc-section sc-strata" id="strata-agent" aria-labelledby="strata-title">
   <header class="sc-head"><p class="eyebrow">ЛОКАЛЬНЫЙ АГЕНТ ДЛЯ ДИЗАЙНА</p><h2 id="strata-title">Strata Agent</h2><p class="sc-lead">Агент, которого я создал для собственной дизайнерской работы. Он работает на домашнем ПК: открытый движок Strata запускает языковую модель Qwen3.8-Flash-Next, ComfyUI рисует и редактирует изображения, а Photoshop собирает многослойные PSD. Как агент для программирования, он планирует задачу, вызывает инструменты, сам проверяет каждый результат и исправляет ошибки.</p></header>
   <ul class="sa-facts"><li><strong>Qwen3.8-Flash-Next</strong><span>MoE-модель на 125 млрд параметров, IQ2_XS, локально через Strata</span></li><li><strong>Krea 2 · Flux3 Klein · Qwen Image 2.1</strong><span>генерация, локальные правки и вырезание в ComfyUI</span></li><li><strong>Photoshop · Topaz</strong><span>многослойные PSD со смарт-объектами и апскейл для печати</span></li><li><strong>~5 мин</strong><span>занимает переключение видеокарты между языковой моделью и ComfyUI, поэтому агент группирует работу с изображениями</span></li></ul>
@@ -748,6 +748,39 @@
     <button type="button" class="cfba-tray" data-cfba-tray hidden>ComfyFloatBar в трее — открыть</button>
   </div>
   <p class="sc-note">Интерфейс панели — как в оригинальном приложении: главная кнопка открытого раздела закреплена внизу панели. Разделы UX/UI и A+ не показаны. Демо: результаты подготовлены из моих проектов; ComfyUI в браузере не запускается.</p>
+</section><section class="sc-section sc-bh3" id="blender-video" aria-labelledby="bh3-title">
+  <header class="sc-head"><p class="eyebrow">BLENDER → ВИДЕО В COMFYUI</p><h2 id="bh3-title">Рекламный ролик с камерой из Blender</h2><p class="sc-lead">Видеомодель сама придумывает движение камеры, поэтому ею трудно управлять. Здесь план сначала строится в 3D: Python-скрипт собирает минимальную сцену в Blender из примитивов, анимирует камеру и рендерит проход глубины. В ComfyUI модель MiniMax H3 с Fun ControlNet Union кадр за кадром следует этому видео глубины, поэтому ролик повторяет расположение объектов и пролёт камеры, а промпт и опорный кадр задают внешний вид. Всё работает локально на одной RTX 3090; мои скрипты управляют Blender и API ComfyUI от начала до конца.</p></header>
+  <ul class="sa-facts"><li><strong>3 плана · 17 с</strong><span>смонтированный ролик 1080p; каждый план — 124 кадра при 24 fps</span></li><li><strong>RTX 3090 · 24 GB</strong><span>всё локально; модели работают по очереди в очереди ComfyUI</span></li><li><strong>~9–14 мин</strong><span>на генерацию 5-секундного плана с 8-шаговой турбо-LoRA, плюс ~13 мин восстановления SeedVR2</span></li><li><strong>VELMÈRE</strong><span>вымышленный бренд и ИИ-концепт, не реальный товар или клиент</span></li></ul>
+  <div class="vz bh3" data-bh3 data-labels="{&quot;play&quot;:&quot;Воспроизвести&quot;,&quot;pause&quot;:&quot;Пауза&quot;,&quot;anchorFirst&quot;:&quot;закрепляет первый кадр&quot;,&quot;anchorLast&quot;:&quot;закрепляет последний кадр&quot;}">
+    <script type="application/json" data-bh3-shots>[{"id":"s1","label":"Пролёт сквозь жемчуг","anchorType":"first","clay":"/assets/showcase/h3/s1-clay.mp4","depth":"/assets/showcase/h3/s1-depth.mp4","film":"/assets/showcase/h3/s1-film.mp4","anchor":"/assets/showcase/h3/s1-anchor.webp"},{"id":"s2","label":"Спираль сверху","anchorType":"last","clay":"/assets/showcase/h3/s2-clay.mp4","depth":"/assets/showcase/h3/s2-depth.mp4","film":"/assets/showcase/h3/s2-film.mp4","anchor":"/assets/showcase/h3/s2-anchor.webp"},{"id":"s3","label":"От макро к общему","anchorType":"last","clay":"/assets/showcase/h3/s3-clay.mp4","depth":"/assets/showcase/h3/s3-depth.mp4","film":"/assets/showcase/h3/s3-film.mp4","anchor":"/assets/showcase/h3/s3-anchor.webp"}]</script>
+    <div class="vz-toolbar">
+      <div class="vz-examples" role="group" aria-label="План"><button type="button" data-bh3-shot="s1" aria-pressed="true">01 · Пролёт сквозь жемчуг</button><button type="button" data-bh3-shot="s2" aria-pressed="false">02 · Спираль сверху</button><button type="button" data-bh3-shot="s3" aria-pressed="false">03 · От макро к общему</button></div>
+      <div class="vz-controls"><button type="button" data-bh3-toggle aria-pressed="false">Пауза</button><button type="button" data-bh3-replay>↻ Повторить</button></div>
+    </div>
+    <ol class="vz-graph" aria-hidden="true"><li data-bh3-node="0"><span>Blender · bpy</span></li><li data-bh3-node="1"><span>Depth pass</span></li><li data-bh3-node="2"><span>Qwen Image 2.1 · ControlNet</span></li><li data-bh3-node="3" class="is-active"><span>MiniMax H3 · Fun ControlNet</span></li><li data-bh3-node="4"><span>SeedVR2 7B</span></li><li data-bh3-node="5"><span>Edit · Music 3</span></li></ol>
+    <div class="vz-main">
+      <div class="bh3-canvas" data-bh3-canvas data-stage="3" style="--split:50%">
+        <video class="bh3-v bh3-v--clay" data-bh3-clay src="/assets/showcase/h3/s1-clay.mp4" muted loop playsinline preload="metadata" disablepictureinpicture aria-hidden="true" tabindex="-1"></video>
+        <video class="bh3-v bh3-v--depth" data-bh3-depth src="/assets/showcase/h3/s1-depth.mp4" muted loop playsinline preload="metadata" disablepictureinpicture aria-hidden="true" tabindex="-1" poster="/assets/showcase/h3/s1-anchor.webp"></video>
+        <img class="bh3-anchor" data-bh3-anchor src="/assets/showcase/h3/s1-anchor.webp" alt="" width="960" height="540" loading="lazy" decoding="async">
+        <div class="bh3-clip"><video class="bh3-v bh3-v--film" data-bh3-film src="/assets/showcase/h3/s1-film.mp4" muted loop playsinline preload="metadata" disablepictureinpicture aria-hidden="true" tabindex="-1" poster="/assets/showcase/h3/s1-anchor.webp"></video><img class="bh3-up bh3-up--after" src="/assets/showcase/h3/upscale-after.webp" alt="" loading="lazy" decoding="async"></div>
+        <img class="bh3-up bh3-up--before" src="/assets/showcase/h3/upscale-before.webp" alt="" loading="lazy" decoding="async">
+        <i class="bh3-line" aria-hidden="true"></i>
+        <span class="bh3-tag bh3-tag--left" data-bh3-tag-left>Управление глубиной</span><span class="bh3-tag bh3-tag--right" data-bh3-tag-right>Сгенерировано</span>
+        <input class="bh3-range" data-bh3-range type="range" min="0" max="100" value="50" aria-label="Разделитель между управлением и результатом" data-labels="{&quot;control&quot;:&quot;Управление глубиной&quot;,&quot;result&quot;:&quot;Сгенерировано&quot;,&quot;before&quot;:&quot;H3 · 1344 × 768&quot;,&quot;after&quot;:&quot;SeedVR2 · 1920 × 1088&quot;}">
+        <span class="vz-badge" data-bh3-badge>MiniMax H3 · Fun ControlNet</span>
+      </div>
+      <aside class="vz-side">
+        <ol class="vz-steps" aria-label="Этапы конвейера"><li><button type="button" data-bh3-stage="0" aria-current="false"><b>01</b><span><strong>Сцена и камера</strong><small>Скрипт собирает сцену из примитивов — подиум, флакон, монолиты, 26 парящих жемчужин — и задаёт три движения камеры. Серый clay-рендер — только превью.</small></span></button></li><li><button type="button" data-bh3-stage="1" aria-current="false"><b>02</b><span><strong>Проход глубины</strong><small>Каждый кадр хранит расстояние до камеры: белое — близко, чёрное — далеко. Диапазон неизменен для всего плана, поэтому карта не мерцает. Именно это видео управляет генерацией.</small></span></button></li><li><button type="button" data-bh3-stage="2" aria-current="false"><b>03</b><span><strong>Опорный кадр</strong><small>Один кадр глубины становится фотореалистичным кадром: янтарный хрусталь, шлифованное золото, травертин, дымка. Лучше всего читаются ракурсы на уровне глаз, поэтому план 1 закрепляет первый кадр, а планы 2–3 — последний.</small></span></button></li><li><button type="button" data-bh3-stage="3" aria-current="step"><b>04</b><span><strong>Генерация видео</strong><small>H3 с 8-шаговой турбо-LoRA рисует 124 кадра 1344 × 768, а видео глубины держит расположение и траекторию камеры. Перетащите разделитель, чтобы сравнить управление с результатом.</small></span></button></li><li><button type="button" data-bh3-stage="4" aria-current="false"><b>05</b><span><strong>Восстановление до 1080p</strong><small>Одношаговое восстановление видео до 1920 × 1088 частями по времени с сохранением цвета в LAB: чётче грани стекла и золото, без мерцания блоков 8 × 8 после генерации.</small></span></button></li><li><button type="button" data-bh3-stage="5" aria-current="false"><b>06</b><span><strong>Монтаж и музыка</strong><small>Чистые склейки там, где камера почти стоит, слоган и финальная карточка настоящим шрифтом (буквы не генерируются) и один цельный инструментальный трек от MiniMax Music 3 на тихом уровне.</small></span></button></li></ol>
+        <p class="vz-stats" data-bh3-meta>Пролёт сквозь жемчуг · 124 × 24 fps</p>
+      </aside>
+    </div>
+    <figure class="bh3-final">
+      <video data-bh3-final src="/assets/showcase/h3/final.mp4" poster="/assets/showcase/h3/final-poster.webp" controls playsinline preload="none" width="1920" height="1080"></video>
+      <figcaption><strong>Готовый ролик · 1080p · со звуком</strong> <span>Плеер стартует с громкостью 20%.</span></figcaption>
+    </figure>
+  </div>
+  <p class="sc-note">Концепт для проверки метода: VELMÈRE — вымышленный бренд, каждый кадр сгенерирован из моей сцены в Blender. Видимые ограничения оставлены как есть: лёгкое мерцание гладких поверхностей из-за турбо-семплинга, а в плане 3 крышка на мгновение темнеет. Сцена в Blender, скрипты для API ComfyUI и монтаж — мои; модели — MiniMax H3, Qwen Image 2.1, SeedVR2 и MiniMax Music 3.</p>
 </section></div>
 </main>
   <footer class="site-footer" id="contact">
